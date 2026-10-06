@@ -36,22 +36,22 @@ def test_shared_id_and_identical_rows_get_distinct_keys():
 
 
 def test_reimport_is_idempotent(conn):
-    first = service.import_nubank_conta(conn, FIXTURE.read_bytes())
-    again = service.import_nubank_conta(conn, FIXTURE.read_bytes())
+    first = service.import_csv(conn, FIXTURE.read_bytes())
+    again = service.import_csv(conn, FIXTURE.read_bytes())
     assert first["novas"] == 9
-    assert again == {"lidas": 9, "novas": 0, "duplicadas": 9}
+    assert again == {"formato": "nubank_conta", "lidas": 9, "novas": 0, "duplicadas": 9}
 
 
 def test_wrong_csv_rejected(conn):
     with pytest.raises(ValueError):
-        service.import_nubank_conta(conn, "a,b\n1,2\n")
+        service.import_csv(conn, "a,b\n1,2\n")
 
 
 def test_spending_excludes_transfers_cardpayment_credit_and_passthrough(conn):
     conn.execute("INSERT INTO own_names (name) VALUES ('MARIA SILVA')")
     conn.execute("INSERT INTO rules (pattern, category, priority) VALUES ('mercado', 'Mercado', 0)")
     conn.execute("INSERT INTO rules (pattern, category, priority) VALUES ('barbearia', 'Cuidados', 0)")
-    service.import_nubank_conta(conn, FIXTURE.read_bytes())
+    service.import_csv(conn, FIXTURE.read_bytes())
     rep = service.monthly_report(conn, "2026-09")
     cats = {c["categoria"]: c["valor"] for c in rep["por_categoria"]}
     # 500 recebido e 500 enviado no mesmo dia = passagem; MARIA = própria; fatura excluída;
@@ -63,7 +63,7 @@ def test_spending_excludes_transfers_cardpayment_credit_and_passthrough(conn):
 def test_rule_priority_then_specificity(conn):
     conn.execute("INSERT INTO rules (pattern, category, priority) VALUES ('mercado', 'Casa', 0)")
     conn.execute("INSERT INTO rules (pattern, category, priority) VALUES ('mercado do ze', 'Mercado', 0)")
-    service.import_nubank_conta(conn, FIXTURE.read_bytes())
+    service.import_csv(conn, FIXTURE.read_bytes())
     assert conn.execute("SELECT DISTINCT category FROM transactions WHERE counterparty='MERCADO DO ZE LTDA'").fetchall()[0][0] == "Mercado"
     conn.execute("INSERT INTO rules (pattern, category, priority) VALUES ('mercado', 'Forçada', 5)")
     service.recategorize(conn)

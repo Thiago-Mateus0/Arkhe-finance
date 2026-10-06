@@ -10,6 +10,12 @@ PASSTHROUGH = "passthrough"  # recebeu e repassou o mesmo valor no mesmo dia
 EXCLUDED_FROM_SPENDING = {TRANSFER, CARD_PAYMENT, CREDIT_FUNDING, PASSTHROUGH, INCOME}
 
 
+def classify_fatura(description: str, amount_cents: int) -> str:
+    if description.lower().startswith("pagamento recebido"):
+        return CARD_PAYMENT
+    return EXPENSE  # inclui estornos (valor positivo = reduz o gasto)
+
+
 def classify(description: str, amount_cents: int, counterparty: str, own_names: set[str]) -> str:
     d = description.lower()
     if d.startswith("pagamento de fatura"):

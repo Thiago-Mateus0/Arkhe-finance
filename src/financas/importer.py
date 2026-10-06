@@ -54,3 +54,40 @@ def parse_nubank_conta(content: str | bytes) -> list[ParsedRow]:
         key = hashlib.sha256(f"{base}|{n}".encode()).hexdigest()
         rows.append(ParsedRow(date, cents, sid, desc, counterparty_of(desc), key))
     return rows
+
+
+def _brl_to_cents(raw: str) -> int:
+    """'20,00' -> 2000; '- 180,00' -> -18000; '1.234,56' -> 123456."""
+    txt = raw.replace(" ", "").replace(".", "").replace(",", ".")
+    return int((Decimal(txt) * 100).to_integral_value())
+
+
+def detect_format(content: str) -> str:
+    header = content.lstrip("\ufeff").splitlines()[0].strip().lower() if content.strip() else ""
+    if header.startswith("data,valor,identificador"):
+        return "nubank_conta"
+    if header == "date,title,amount":
+        return "nubank_fatura"
+    raise ValueError(f"Formato de CSV não reconhecido (cabeçalho: {header!r})")
+
+
+def parse_nubank_fatura(content: str | bytes) -> list[ParsedRow]:
+    """Fatura do cartão: gasto positivo vira valor negativo (saída); pagamento/estorno vem negativo."""
+    if isinstance(content, bytes):
+        content = content.decode("utf-8-sig")
+    rows: list[ParsedRow] = []
+    seen: dict[str, int] = {}
+    for rec in csv.DictReader(io.StringIO(content)):
+        if not (rec.get("date") or "").strip():
+            continue
+        date = rec["date"].strip()
+        datetime.strptime(date, "%Y-%m-%d")
+        title = rec["title"].strip()
+        cents = -_brl_to_cents(rec["amount"])
+        # Sem identificador: linhas idênticas no mesmo dia são compras distintas (ex.: duas corridas de 4,60).
+        base = f"nubank_fatura||{date}|{cents}|{title}"
+        n = seen.get(base, 0)
+        seen[base] = n + 1
+        key = hashlib.sha256(f"{base}|{n}".encode()).hexdigest()
+        rows.append(ParsedRow(date, cents, "", title, title.upper(), key))
+    return rows

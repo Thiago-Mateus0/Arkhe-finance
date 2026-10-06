@@ -23,10 +23,10 @@ class RuleIn(BaseModel):
     priority: int = 0
 
 
-@app.post("/import/nubank-conta")
+@app.post("/import")
 async def import_csv(file: UploadFile, conn=Depends(get_conn)):
     try:
-        return service.import_nubank_conta(conn, await file.read())
+        return service.import_csv(conn, await file.read())
     except ValueError as e:
         raise HTTPException(422, str(e))
 
@@ -50,6 +50,7 @@ def add_own_name(name: str, conn=Depends(get_conn)):
     conn.execute("INSERT OR IGNORE INTO own_names (household_id, name) VALUES (?,?)",
                  (service.HOUSEHOLD, " ".join(name.split()).upper()))
     conn.commit()
+    service.reclassify(conn)
     return {"nomes": sorted(service.get_own_names(conn))}
 
 

@@ -11,7 +11,7 @@ pytest
 Dados ficam em `financas.db` (SQLite, ignorado pelo git; mude com `FINANCAS_DB`).
 
 ## Como funciona
-- `POST /import/nubank-conta` — importa o CSV. Reimportar é seguro: linhas já vistas são ignoradas
+- `POST /import` — importa o CSV de conta ou de fatura (detecta pelo cabeçalho). Reimportar é seguro: linhas já vistas são ignoradas
   (chave = identificador + valor + descrição + contador; o ID do Nubank sozinho **não** é único).
 - `POST /rules` — `{"pattern": "uber", "category": "Transporte", "priority": 0}`. Maior prioridade vence;
   empate vai para o padrão mais longo.
@@ -27,4 +27,4 @@ Dados ficam em `financas.db` (SQLite, ignorado pelo git; mude com `FINANCAS_DB`)
 `samples/` está no `.gitignore`: extratos reais têm nomes, CPFs parciais e contas. Testes usam `tests/fixtures/`.
 
 ## Próximos passos
-CSV de fatura do cartão → parcelas futuras → patrimônio manual → Open Finance.
+Parcelas futuras (falta uma fatura com parcelamento para validar o formato) → patrimônio manual → Open Finance.
