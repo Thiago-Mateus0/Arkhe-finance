@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Finanças</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem}
+table{width:100%;border-collapse:collapse}td,th{padding:.4rem;border-bottom:1px solid #8884;text-align:left;vertical-align:top}
+.n{text-align:right;white-space:nowrap}.up{color:#c0392b}.down{color:#27ae60}.d{font-size:.85rem;opacity:.75;word-break:break-word}
+</style></head><body>
+<h1>Finanças</h1>
+<p><input type="file" id="f"> <button onclick="up()">Importar CSV (conta ou fatura Nubank)</button> <span id="msg"></span></p>
+<p>Mês: <input type="month" id="m" onchange="load()"></p>
+<p id="tot"></p>
+<table><thead><tr><th>Categoria</th><th class="n">Qtd</th><th class="n">Valor</th><th class="n">vs. mês anterior</th></tr></thead><tbody id="t"></tbody></table>
+<h2>Sem categoria</h2>
+<datalist id="cats"></datalist>
+<table><tbody id="p"></tbody></table>
+<script>
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+m.value=new Date().toISOString().slice(0,7);
+async function up(){const fd=new FormData();fd.append('file',f.files[0]);
+ const r=await fetch('/import',{method:'POST',body:fd});const j=await r.json();
+ msg.textContent=r.ok?`${j.novas} novas, ${j.duplicadas} duplicadas`:j.detail;load();}
+function delta(v,a){const d=v-a;if(!a)return '—';return `<span class="${d>0?'up':'down'}">${d>0?'+':''}${brl(d)}</span>`}
+async function load(){
+ const j=await (await fetch('/reports/monthly?month='+m.value)).json();
+ tot.textContent=`Gastos: ${brl(j.gastos_total)} (mês anterior ${brl(j.gastos_mes_anterior)}) · Receitas: ${brl(j.receitas_total)}`;
+ t.innerHTML=j.por_categoria.map(c=>`<tr><td>${esc(c.categoria)}</td><td class="n">${c.qtd}</td><td class="n">${brl(c.valor)}</td><td class="n">${delta(c.valor,c.mes_anterior)}</td></tr>`).join('');
+ cats.innerHTML=(await (await fetch('/categories')).json()).map(c=>`<option value="${esc(c)}">`).join('');
+ const x=await (await fetch(`/transactions?month=${m.value}&kind=expense&category=${encodeURIComponent('Sem categoria')}`)).json();
+ p.innerHTML=x.length?x.map(r=>`<tr><td>${r.date.slice(8)}/${r.date.slice(5,7)}<br><b>${brl(-r.amount_cents/100)}</b></td>
+  <td><div class="d">${esc(r.description)}</div>
+  <input list="cats" id="c${r.id}" placeholder="categoria"> <label><input type="checkbox" id="r${r.id}"> lembrar</label>
+  <button onclick="save(${r.id})">Salvar</button></td></tr>`).join(''):'<tr><td>Tudo categorizado 🎉</td></tr>';}
+async function save(id){const c=document.getElementById('c'+id).value.trim();if(!c)return;
+ await fetch('/transactions/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},
+  body:JSON.stringify({category:c,remember:document.getElementById('r'+id).checked})});load();}
+load();
+</script></body></html>

@@ -1,0 +1,43 @@
+[
+  {"pattern": "uber", "category": "Transporte", "priority": 0},
+  {"pattern": "99*", "category": "Transporte", "priority": 0},
+  {"pattern": "ubereats", "category": "Delivery", "priority": 10},
+  {"pattern": "uber *eats", "category": "Delivery", "priority": 10},
+  {"pattern": "ifood", "category": "Delivery", "priority": 10},
+  {"pattern": "99food", "category": "Delivery", "priority": 10},
+  {"pattern": "rappi", "category": "Delivery", "priority": 10},
+  {"pattern": "keeta", "category": "Delivery", "priority": 10},
+
+  {"pattern": "acai", "category": "Alimentação", "priority": 0},
+  {"pattern": "padaria", "category": "Alimentação", "priority": 0},
+  {"pattern": "restaurante", "category": "Alimentação", "priority": 0},
+  {"pattern": "lanchonete", "category": "Alimentação", "priority": 0},
+  {"pattern": "supermercado", "category": "Mercado", "priority": 0},
+  {"pattern": "atacadao", "category": "Mercado", "priority": 0},
+
+  {"pattern": "farmacia", "category": "Saúde", "priority": 0},
+  {"pattern": "drogaria", "category": "Saúde", "priority": 0},
+  {"pattern": "academia", "category": "Saúde", "priority": 0},
+
+  {"pattern": "recarga", "category": "Celular", "priority": 0},
+  {"pattern": "recvivo", "category": "Celular", "priority": 0},
+
+  {"pattern": "sociedade educacional", "category": "Educação", "priority": 0},
+  {"pattern": "escola", "category": "Educação", "priority": 0},
+  {"pattern": "faculdade", "category": "Educação", "priority": 0},
+
+  {"pattern": "netflix", "category": "Assinaturas", "priority": 0},
+  {"pattern": "spotify", "category": "Assinaturas", "priority": 0},
+  {"pattern": "youtube", "category": "Assinaturas", "priority": 0},
+  {"pattern": "icloud", "category": "Assinaturas", "priority": 0},
+  {"pattern": "amazon prime", "category": "Assinaturas", "priority": 0},
+
+  {"pattern": "arenapass", "category": "Lazer", "priority": 0},
+  {"pattern": "ingresso", "category": "Lazer", "priority": 0},
+  {"pattern": "cinema", "category": "Lazer", "priority": 0},
+
+  {"pattern": "amazon", "category": "Compras", "priority": 0},
+  {"pattern": "mercadolivre", "category": "Compras", "priority": 0},
+  {"pattern": "shopee", "category": "Compras", "priority": 0},
+  {"pattern": "shein", "category": "Compras", "priority": 0}
+]

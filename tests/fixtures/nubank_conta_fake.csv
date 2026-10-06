@@ -1,0 +1,10 @@
+Data,Valor,Identificador,Descrição
+01/09/2026,500.00,id-1,Transferência recebida pelo Pix - EMPRESA FICTICIA LTDA - 11.111.111/0001-11 - BANCO X (0001) Agência: 1 Conta: 1-1
+01/09/2026,-500.00,id-2,Transferência enviada pelo Pix - FULANO DE TAL - •••.111.111-•• - BANCO Y (0002) Agência: 1 Conta: 2-2
+02/09/2026,-45.90,id-3,Transferência enviada pelo Pix - MERCADO DO ZE LTDA - 22.222.222/0001-22 - BANCO Z (0003) Agência: 1 Conta: 3-3
+03/09/2026,-100.00,id-4,Transferência enviada pelo Pix - MARIA SILVA - •••.333.333-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 4-4
+04/09/2026,-200.00,id-5,Pagamento de fatura
+05/09/2026,150.00,id-6,Valor adicionado na conta por cartão de crédito - Valor adicionado para Pix no Crédito
+05/09/2026,-150.00,id-6,Transferência enviada pelo Pix - BARBEARIA DO JOAO - •••.444.444-•• - BANCO W (0004) Agência: 1 Conta: 5-5
+06/09/2026,-20.00,id-7,Transferência enviada pelo Pix - MERCADO DO ZE LTDA - 22.222.222/0001-22 - BANCO Z (0003) Agência: 1 Conta: 3-3
+06/09/2026,-20.00,id-7,Transferência enviada pelo Pix - MERCADO DO ZE LTDA - 22.222.222/0001-22 - BANCO Z (0003) Agência: 1 Conta: 3-3
