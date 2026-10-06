@@ -1,0 +1,9 @@
+# Dados financeiros reais nunca vão para o git
+samples/
+*.db
+*.sqlite3
+.env
+__pycache__/
+.venv/
+.pytest_cache/
+*.egg-info/

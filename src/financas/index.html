@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Finanças</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:640px;margin:2rem auto;padding:0 1rem}
+table{width:100%;border-collapse:collapse}td,th{padding:.4rem;border-bottom:1px solid #8884;text-align:left}
+td:last-child,th:last-child{text-align:right}
+</style></head><body>
+<h1>Finanças</h1>
+<p><input type="file" id="f"> <button onclick="up()">Importar CSV Nubank</button> <span id="msg"></span></p>
+<p>Mês: <input type="month" id="m" onchange="load()"></p>
+<p id="tot"></p>
+<table><thead><tr><th>Categoria</th><th>Qtd</th><th>Valor</th></tr></thead><tbody id="t"></tbody></table>
+<script>
+const brl=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+m.value=new Date().toISOString().slice(0,7);
+async function up(){const fd=new FormData();fd.append('file',f.files[0]);
+ const r=await fetch('/import/nubank-conta',{method:'POST',body:fd});const j=await r.json();
+ msg.textContent=r.ok?`${j.novas} novas, ${j.duplicadas} duplicadas`:j.detail;load();}
+async function load(){const j=await (await fetch('/reports/monthly?month='+m.value)).json();
+ tot.textContent=`Gastos: ${brl(j.gastos_total)} · Receitas: ${brl(j.receitas_total)}`;
+ t.innerHTML=j.por_categoria.map(c=>`<tr><td>${c.categoria}</td><td>${c.qtd}</td><td>${brl(c.valor)}</td></tr>`).join('');}
+load();
+</script></body></html>

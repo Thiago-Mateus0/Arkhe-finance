@@ -1,0 +1,73 @@
+from pathlib import Path
+
+from fastapi import Depends, FastAPI, HTTPException, UploadFile
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+
+from . import db, service
+
+app = FastAPI(title="Finanças")
+
+
+def get_conn():
+    conn = db.connect()
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+class RuleIn(BaseModel):
+    pattern: str
+    category: str
+    priority: int = 0
+
+
+@app.post("/import/nubank-conta")
+async def import_csv(file: UploadFile, conn=Depends(get_conn)):
+    try:
+        return service.import_nubank_conta(conn, await file.read())
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+
+
+@app.post("/rules")
+def add_rule(rule: RuleIn, conn=Depends(get_conn)):
+    conn.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES (?,?,?,?)",
+                 (service.HOUSEHOLD, rule.pattern, rule.category, rule.priority))
+    conn.commit()
+    return {"recategorizadas": service.recategorize(conn)}
+
+
+@app.get("/rules")
+def list_rules(conn=Depends(get_conn)):
+    return service.get_rules(conn)
+
+
+@app.put("/own-names/{name}")
+def add_own_name(name: str, conn=Depends(get_conn)):
+    """Nome (como aparece no Pix) de contas suas: vira 'transfer' e não conta como gasto."""
+    conn.execute("INSERT OR IGNORE INTO own_names (household_id, name) VALUES (?,?)",
+                 (service.HOUSEHOLD, " ".join(name.split()).upper()))
+    conn.commit()
+    return {"nomes": sorted(service.get_own_names(conn))}
+
+
+@app.get("/reports/monthly")
+def monthly(month: str, conn=Depends(get_conn)):
+    return service.monthly_report(conn, month)
+
+
+@app.get("/transactions")
+def transactions(month: str, category: str | None = None, conn=Depends(get_conn)):
+    q = "SELECT * FROM transactions WHERE household_id=? AND date LIKE ?"
+    args: list = [service.HOUSEHOLD, f"{month}-%"]
+    if category:
+        q += " AND category=?"
+        args.append(category)
+    return [dict(r) for r in conn.execute(q + " ORDER BY date, id", args)]
+
+
+@app.get("/", response_class=HTMLResponse)
+def index():
+    return (Path(__file__).parent / "index.html").read_text(encoding="utf-8")
