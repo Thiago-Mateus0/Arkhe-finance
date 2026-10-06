@@ -30,7 +30,7 @@ async function load(){
  const x=await (await fetch(`/transactions?month=${m.value}&kind=expense&category=${encodeURIComponent('Sem categoria')}`)).json();
  p.innerHTML=x.length?x.map(r=>`<tr><td>${r.date.slice(8)}/${r.date.slice(5,7)}<br><b>${brl(-r.amount_cents/100)}</b></td>
   <td><div class="d">${esc(r.description)}</div>
-  <input list="cats" id="c${r.id}" placeholder="categoria"> <label><input type="checkbox" id="r${r.id}"> lembrar</label>
+  <input list="cats" id="c${r.id}" placeholder="categoria"> <label><input type="checkbox" id="r${r.id}" checked> lembrar</label>
   <button onclick="save(${r.id})">Salvar</button></td></tr>`).join(''):'<tr><td>Tudo categorizado 🎉</td></tr>';}
 async function save(id){const c=document.getElementById('c'+id).value.trim();if(!c)return;
  await fetch('/transactions/'+id,{method:'PATCH',headers:{'Content-Type':'application/json'},
