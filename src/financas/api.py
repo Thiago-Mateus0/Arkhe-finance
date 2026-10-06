@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
@@ -6,7 +7,20 @@ from pydantic import BaseModel
 
 from . import db, service
 
-app = FastAPI(title="Finanças")
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    """Banco novo (sem regras nem transações) já nasce com as regras padrão."""
+    conn = db.connect()
+    try:
+        empty = not conn.execute("SELECT 1 FROM rules UNION ALL SELECT 1 FROM transactions LIMIT 1").fetchone()
+        if empty:
+            service.seed_default_rules(conn)
+    finally:
+        conn.close()
+    yield
+
+
+app = FastAPI(title="Finanças", lifespan=lifespan)
 
 
 def get_conn():

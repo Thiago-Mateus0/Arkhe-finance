@@ -48,3 +48,13 @@ def test_previous_month_comparison(tmp_path):
     rep = service.monthly_report(c, "2026-09")
     assert rep["gastos_mes_anterior"] == 50.0 and rep["por_categoria"][0]["mes_anterior"] == 50.0
     assert service._month_before("2026-01") == "2025-12"
+
+
+def test_own_names_from_env_and_first_run_seed(tmp_path, monkeypatch):
+    monkeypatch.setattr(db, "DEFAULT_PATH", tmp_path / "e.db")
+    monkeypatch.setenv("FINANCAS_OWN_NAMES", "maria  silva; outra pessoa")
+    with TestClient(api.app) as c:  # dispara o lifespan
+        assert any(r["category"] == "Transporte" for r in c.get("/rules").json())
+        c.post("/import", files={"file": ("x.csv", CONTA)})
+        kinds = {t["counterparty"]: t["kind"] for t in c.get("/transactions", params={"month": "2026-09"}).json()}
+        assert kinds["MARIA SILVA"] == "transfer"

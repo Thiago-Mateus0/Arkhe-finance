@@ -1,4 +1,5 @@
 import json
+import os
 import sqlite3
 from pathlib import Path
 
@@ -14,7 +15,10 @@ def get_rules(conn: sqlite3.Connection) -> list[dict]:
 
 
 def get_own_names(conn: sqlite3.Connection) -> set[str]:
-    return {r["name"] for r in conn.execute("SELECT name FROM own_names WHERE household_id=?", (HOUSEHOLD,))}
+    """Nomes do banco + FINANCAS_OWN_NAMES (separados por ';'), tudo em maiúsculas."""
+    from_db = {r["name"] for r in conn.execute("SELECT name FROM own_names WHERE household_id=?", (HOUSEHOLD,))}
+    from_env = {" ".join(n.split()).upper() for n in os.environ.get("FINANCAS_OWN_NAMES", "").split(";") if n.strip()}
+    return from_db | from_env
 
 
 def import_csv(conn: sqlite3.Connection, content: str | bytes) -> dict:

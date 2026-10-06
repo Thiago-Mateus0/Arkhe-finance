@@ -2,7 +2,15 @@
 
 App pessoal: importa o CSV de conta do Nubank, categoriza por regras suas e mostra gastos por categoria no mês.
 
-## Rodar
+## Rodar (um comando)
+```bash
+export FINANCAS_OWN_NAMES="SEU NOME COMPLETO"   # contas suas, separadas por ";" (opcional)
+./run.sh                                         # abre http://localhost:8000
+./run.sh import extrato.csv fatura.csv          # importa sem abrir a tela
+```
+Na primeira execução as regras padrão já são carregadas.
+
+### Para desenvolver
 ```bash
 pip install -e ".[dev]"
 uvicorn financas.api:app --reload      # http://localhost:8000
