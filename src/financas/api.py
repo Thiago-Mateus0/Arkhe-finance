@@ -71,13 +71,37 @@ def monthly(month: str, conn=Depends(get_conn)):
     return service.monthly_report(conn, month)
 
 
+class CategoryIn(BaseModel):
+    category: str
+    remember: bool = False
+
+
+@app.patch("/transactions/{tx_id}")
+def set_category(tx_id: int, body: CategoryIn, conn=Depends(get_conn)):
+    category = body.category.strip()
+    if not category:
+        raise HTTPException(422, "Categoria vazia")
+    res = service.set_category(conn, tx_id, category, body.remember)
+    if res is None:
+        raise HTTPException(404, "Transação não encontrada")
+    return res
+
+
+@app.get("/categories")
+def categories(conn=Depends(get_conn)):
+    return service.list_categories(conn)
+
+
 @app.get("/transactions")
-def transactions(month: str, category: str | None = None, conn=Depends(get_conn)):
+def transactions(month: str, category: str | None = None, kind: str | None = None, conn=Depends(get_conn)):
     q = "SELECT * FROM transactions WHERE household_id=? AND date LIKE ?"
     args: list = [service.HOUSEHOLD, f"{month}-%"]
     if category:
         q += " AND category=?"
         args.append(category)
+    if kind:
+        q += " AND kind=?"
+        args.append(kind)
     return [dict(r) for r in conn.execute(q + " ORDER BY date, id", args)]
 
 

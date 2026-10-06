@@ -65,24 +65,62 @@ def recategorize(conn: sqlite3.Connection) -> int:
     return n
 
 
-def monthly_report(conn: sqlite3.Connection, month: str) -> dict:
-    """month = 'YYYY-MM'. Gastos = só kind 'expense'."""
-    params = (HOUSEHOLD, f"{month}-%")
-    by_cat = conn.execute(
+def _month_before(month: str) -> str:
+    y, m = map(int, month.split("-"))
+    return f"{y - 1}-12" if m == 1 else f"{y}-{m - 1:02d}"
+
+
+def _spending_by_category(conn: sqlite3.Connection, month: str) -> list[sqlite3.Row]:
+    return conn.execute(
         "SELECT category, -SUM(amount_cents) AS cents, COUNT(*) AS n FROM transactions"
         " WHERE household_id=? AND date LIKE ? AND kind='expense' GROUP BY category ORDER BY cents DESC",
-        params,
+        (HOUSEHOLD, f"{month}-%"),
     ).fetchall()
+
+
+def monthly_report(conn: sqlite3.Connection, month: str) -> dict:
+    """month = 'YYYY-MM'. Gastos = só kind 'expense'. Inclui o valor do mês anterior por categoria."""
+    by_cat = _spending_by_category(conn, month)
+    prev = {r["category"]: r["cents"] for r in _spending_by_category(conn, _month_before(month))}
     income = conn.execute(
         "SELECT COALESCE(SUM(amount_cents),0) FROM transactions"
-        " WHERE household_id=? AND date LIKE ? AND kind='income'", params).fetchone()[0]
-    total = sum(r["cents"] for r in by_cat)
+        " WHERE household_id=? AND date LIKE ? AND kind='income'", (HOUSEHOLD, f"{month}-%")).fetchone()[0]
     return {
         "mes": month,
-        "gastos_total": total / 100,
+        "gastos_total": sum(r["cents"] for r in by_cat) / 100,
+        "gastos_mes_anterior": sum(prev.values()) / 100,
         "receitas_total": income / 100,
-        "por_categoria": [{"categoria": r["category"], "valor": r["cents"] / 100, "qtd": r["n"]} for r in by_cat],
+        "por_categoria": [
+            {"categoria": r["category"], "valor": r["cents"] / 100, "qtd": r["n"],
+             "mes_anterior": prev.get(r["category"], 0) / 100}
+            for r in by_cat
+        ],
     }
+
+
+def set_category(conn: sqlite3.Connection, tx_id: int, category: str, remember: bool = False) -> dict | None:
+    """Categoria manual: fica travada (regras não sobrescrevem). 'remember' cria uma regra
+    pela contraparte (ou descrição) e a aplica às demais transações não travadas."""
+    t = conn.execute("SELECT description, counterparty FROM transactions WHERE id=? AND household_id=?",
+                     (tx_id, HOUSEHOLD)).fetchone()
+    if t is None:
+        return None
+    conn.execute("UPDATE transactions SET category=?, category_locked=1 WHERE id=?", (category, tx_id))
+    rule_pattern = None
+    if remember:
+        rule_pattern = (t["counterparty"] or t["description"]).lower()
+        conn.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES (?,?,?,5)",
+                     (HOUSEHOLD, rule_pattern, category))
+    conn.commit()
+    return {"categoria": category, "regra_criada": rule_pattern,
+            "recategorizadas": recategorize(conn) if remember else 0}
+
+
+def list_categories(conn: sqlite3.Connection) -> list[str]:
+    rows = conn.execute(
+        "SELECT category FROM rules WHERE household_id=? UNION SELECT category FROM transactions"
+        " WHERE household_id=?", (HOUSEHOLD, HOUSEHOLD)).fetchall()
+    return sorted({r[0] for r in rows} - {rules.UNCATEGORIZED})
 
 
 def seed_default_rules(conn: sqlite3.Connection) -> dict:

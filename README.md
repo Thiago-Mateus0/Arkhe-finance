@@ -17,6 +17,7 @@ Dados ficam em `financas.db` (SQLite, ignorado pelo git; mude com `FINANCAS_DB`)
 - `POST /rules` — `{"pattern": "uber", "category": "Transporte", "priority": 0}`. Maior prioridade vence;
   empate vai para o padrão mais longo.
 - `PUT /own-names/{nome}` — nome (como aparece no Pix) das suas outras contas; essas transferências não são gasto.
+- `PATCH /transactions/{id}` — categoria manual (`{"category": "Família", "remember": true}`); fica travada e `remember` cria uma regra pela contraparte.
 - `GET /reports/monthly?month=2026-09` — gastos por categoria.
 
 ## O que NÃO conta como gasto
