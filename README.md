@@ -13,6 +13,7 @@ Dados ficam em `financas.db` (SQLite, ignorado pelo git; mude com `FINANCAS_DB`)
 ## Como funciona
 - `POST /import` — importa o CSV de conta ou de fatura (detecta pelo cabeçalho). Reimportar é seguro: linhas já vistas são ignoradas
   (chave = identificador + valor + descrição + contador; o ID do Nubank sozinho **não** é único).
+- `POST /rules/seed` — carrega as regras padrão (`default_rules.json`: Transporte, Delivery, Saúde...); `DELETE /rules/{id}` apaga uma.
 - `POST /rules` — `{"pattern": "uber", "category": "Transporte", "priority": 0}`. Maior prioridade vence;
   empate vai para o padrão mais longo.
 - `PUT /own-names/{nome}` — nome (como aparece no Pix) das suas outras contas; essas transferências não são gasto.

@@ -1,4 +1,6 @@
+import json
 import sqlite3
+from pathlib import Path
 
 from . import classifier, rules
 from .classifier import EXPENSE
@@ -81,3 +83,26 @@ def monthly_report(conn: sqlite3.Connection, month: str) -> dict:
         "receitas_total": income / 100,
         "por_categoria": [{"categoria": r["category"], "valor": r["cents"] / 100, "qtd": r["n"]} for r in by_cat],
     }
+
+
+def seed_default_rules(conn: sqlite3.Connection) -> dict:
+    """Carrega as regras padrão; ignora as que já existem (mesmo padrão e categoria)."""
+    defaults = json.loads((Path(__file__).parent / "default_rules.json").read_text(encoding="utf-8"))
+    existing = {(r["pattern"].lower(), r["category"]) for r in get_rules(conn)}
+    added = 0
+    for r in defaults:
+        if (r["pattern"].lower(), r["category"]) in existing:
+            continue
+        conn.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES (?,?,?,?)",
+                     (HOUSEHOLD, r["pattern"], r["category"], r["priority"]))
+        added += 1
+    conn.commit()
+    return {"adicionadas": added, "recategorizadas": recategorize(conn)}
+
+
+def delete_rule(conn: sqlite3.Connection, rule_id: int) -> bool:
+    cur = conn.execute("DELETE FROM rules WHERE id=? AND household_id=?", (rule_id, HOUSEHOLD))
+    conn.commit()
+    if cur.rowcount:
+        recategorize(conn)
+    return bool(cur.rowcount)

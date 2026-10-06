@@ -39,6 +39,18 @@ def add_rule(rule: RuleIn, conn=Depends(get_conn)):
     return {"recategorizadas": service.recategorize(conn)}
 
 
+@app.post("/rules/seed")
+def seed_rules(conn=Depends(get_conn)):
+    return service.seed_default_rules(conn)
+
+
+@app.delete("/rules/{rule_id}")
+def delete_rule(rule_id: int, conn=Depends(get_conn)):
+    if not service.delete_rule(conn, rule_id):
+        raise HTTPException(404, "Regra não encontrada")
+    return {"ok": True}
+
+
 @app.get("/rules")
 def list_rules(conn=Depends(get_conn)):
     return service.get_rules(conn)
