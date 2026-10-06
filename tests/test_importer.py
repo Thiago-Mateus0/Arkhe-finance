@@ -25,8 +25,8 @@ def test_parse_values_and_dates():
 def test_counterparty_extraction():
     d = "Transferência enviada pelo Pix - MERCADO DO ZE LTDA - 22.222.222/0001-22 - BANCO Z (0003)"
     assert counterparty_of(d) == "MERCADO DO ZE LTDA"
-    d2 = "Transferência enviada pelo Pix via Open Banking - Iniciada por: Muevy - HS DO BRASIL LTDA - 47.123.407/0001-70 - X"
-    assert counterparty_of(d2) == "HS DO BRASIL LTDA"
+    d2 = "Transferência enviada pelo Pix via Open Banking - Iniciada por: AppPix - EMPRESA FICTICIA LTDA - 11.111.111/0001-11 - X"
+    assert counterparty_of(d2) == "EMPRESA FICTICIA LTDA"
     assert counterparty_of("Pagamento de fatura") == ""
 
 
