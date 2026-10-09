@@ -2,19 +2,18 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from . import db, service
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Banco novo (sem regras nem transações) já nasce com as regras padrão."""
+    """Primeira execução: carrega as regras padrão (uma vez só)."""
     conn = db.connect()
     try:
-        empty = not conn.execute("SELECT 1 FROM rules UNION ALL SELECT 1 FROM transactions LIMIT 1").fetchone()
-        if empty:
-            service.seed_default_rules(conn)
+        service.seed_default_rules_once(conn)
     finally:
         conn.close()
     yield
@@ -106,19 +105,41 @@ def categories(conn=Depends(get_conn)):
     return service.list_categories(conn)
 
 
+@app.get("/reports/daily")
+def daily(month: str, conn=Depends(get_conn)):
+    return service.daily_report(conn, month)
+
+
 @app.get("/transactions")
-def transactions(month: str, category: str | None = None, kind: str | None = None, conn=Depends(get_conn)):
-    q = "SELECT * FROM transactions WHERE household_id=? AND date LIKE ?"
+def transactions(month: str, category: str | None = None, kind: str | None = None,
+                 kinds: str | None = None, q: str | None = None, desc: bool = False, conn=Depends(get_conn)):
+    """kind=expense ou kinds=income,expense; q busca na descrição/contraparte; desc=true: mais novas primeiro."""
+    sql = "SELECT * FROM transactions WHERE household_id=? AND date LIKE ?"
     args: list = [service.HOUSEHOLD, f"{month}-%"]
     if category:
-        q += " AND category=?"
+        sql += " AND category=?"
         args.append(category)
-    if kind:
-        q += " AND kind=?"
-        args.append(kind)
-    return [dict(r) for r in conn.execute(q + " ORDER BY date, id", args)]
+    wanted = [k for k in (kinds.split(",") if kinds else [kind] if kind else []) if k]
+    if wanted:
+        sql += f" AND kind IN ({','.join('?' * len(wanted))})"
+        args += wanted
+    if q and q.strip():
+        like = f"%{q.strip().lower()}%"
+        sql += " AND (lower(description) LIKE ? OR lower(counterparty) LIKE ?)"
+        args += [like, like]
+    order = "DESC" if desc else "ASC"
+    return [dict(r) for r in conn.execute(f"{sql} ORDER BY date {order}, id {order}", args)]
+
+
+STATIC = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 @app.get("/", response_class=HTMLResponse)
 def index():
-    return (Path(__file__).parent / "index.html").read_text(encoding="utf-8")
+    return (STATIC / "index.html").read_text(encoding="utf-8")
+
+
+@app.get("/manifest.webmanifest")
+def manifest():
+    return FileResponse(STATIC / "manifest.webmanifest", media_type="application/manifest+json")

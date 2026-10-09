@@ -19,6 +19,9 @@ def conn(tmp_path):
     ("Uber *Eats", "Delivery"),  # Uber Eats não é corrida
     ("Sua Academia", "Saúde"),
     ("Recarga de celular", "Celular"),
+    ("Transferência enviada pelo Pix - IMOBILIARIA SOL LTDA", "Moradia"),
+    ("Barbearia do Ze", "Cuidados"),
+    ("Livraria Cultura Exemplo", "Compras"),
     ("Loja Qualquer", rules.UNCATEGORIZED),
 ])
 def test_default_rules(conn, title, expected):
@@ -34,3 +37,14 @@ def test_seed_is_idempotent_and_delete(conn):
     assert service.seed_default_rules(conn)["adicionadas"] == 0
     rid = service.get_rules(conn)[0]["id"]
     assert service.delete_rule(conn, rid) and not service.delete_rule(conn, rid)
+
+
+def test_seed_once_survives_importing_before_first_server_start(tmp_path):
+    c = db.connect(tmp_path / "once.db")
+    service.import_csv(c, b'date,title,amount\n2026-09-01,Uber,"10,00"\n')  # banco já tem transações
+    assert service.seed_default_rules_once(c) is True
+    assert service.seed_default_rules_once(c) is False
+    rid = service.get_rules(c)[0]["id"]
+    service.delete_rule(c, rid)
+    service.seed_default_rules_once(c)  # não ressuscita o que o usuário apagou
+    assert rid not in {r["id"] for r in service.get_rules(c)}

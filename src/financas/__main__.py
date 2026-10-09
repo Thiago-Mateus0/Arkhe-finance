@@ -10,6 +10,7 @@ def main(argv: list[str]) -> int:
         print(__doc__)
         return 2
     conn = db.connect()
+    service.seed_default_rules_once(conn)
     code = 0
     for name in argv[1:]:
         try:
