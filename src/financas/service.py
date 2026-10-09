@@ -1,6 +1,7 @@
 import json
 import os
 import sqlite3
+from datetime import date
 from pathlib import Path
 
 from . import classifier, rules
@@ -82,6 +83,14 @@ def _spending_by_category(conn: sqlite3.Connection, month: str) -> list[sqlite3.
     ).fetchall()
 
 
+def _spending_by_account(conn: sqlite3.Connection, month: str) -> dict[str, int]:
+    rows = conn.execute(
+        "SELECT account, -SUM(amount_cents) AS cents FROM transactions"
+        " WHERE household_id=? AND date LIKE ? AND kind='expense' GROUP BY account",
+        (HOUSEHOLD, f"{month}-%")).fetchall()
+    return {r["account"]: r["cents"] for r in rows}
+
+
 def monthly_report(conn: sqlite3.Connection, month: str) -> dict:
     """month = 'YYYY-MM'. Gastos = só kind 'expense'. Inclui o valor do mês anterior por categoria."""
     by_cat = _spending_by_category(conn, month)
@@ -93,6 +102,8 @@ def monthly_report(conn: sqlite3.Connection, month: str) -> dict:
         "mes": month,
         "gastos_total": sum(r["cents"] for r in by_cat) / 100,
         "gastos_mes_anterior": sum(prev.values()) / 100,
+        "gastos_cartao": _spending_by_account(conn, month).get("nubank_fatura", 0) / 100,
+        "gastos_conta": _spending_by_account(conn, month).get("nubank_conta", 0) / 100,
         "receitas_total": income / 100,
         "por_categoria": [
             {"categoria": r["category"], "valor": r["cents"] / 100, "qtd": r["n"],
@@ -148,3 +159,29 @@ def delete_rule(conn: sqlite3.Connection, rule_id: int) -> bool:
     if cur.rowcount:
         recategorize(conn)
     return bool(cur.rowcount)
+
+
+def _days_in_month(month: str) -> int:
+    y, m = map(int, month.split("-"))
+    nxt = date(y + (m == 12), 1 if m == 12 else m + 1, 1)
+    return (nxt - date(y, m, 1)).days
+
+
+def daily_report(conn: sqlite3.Connection, month: str) -> dict:
+    """Gastos e entradas por dia do mês, mais os gastos diários do mês anterior (para comparar)."""
+    def per_day(m: str, kind: str) -> dict[int, int]:
+        rows = conn.execute(
+            "SELECT CAST(substr(date, 9, 2) AS INTEGER) AS d, SUM(ABS(amount_cents)) AS c FROM transactions"
+            " WHERE household_id=? AND date LIKE ? AND kind=? GROUP BY d", (HOUSEHOLD, f"{m}-%", kind)).fetchall()
+        return {r["d"]: r["c"] for r in rows}
+
+    spend, income = per_day(month, "expense"), per_day(month, "income")
+    prev_spend = per_day(_month_before(month), "expense")
+    n = _days_in_month(month)
+    return {
+        "mes": month,
+        "dias": [{"dia": d, "gastos": spend.get(d, 0) / 100, "entradas": income.get(d, 0) / 100}
+                 for d in range(1, n + 1)],
+        "anterior": [{"dia": d, "gastos": prev_spend.get(d, 0) / 100}
+                     for d in range(1, _days_in_month(_month_before(month)) + 1)],
+    }

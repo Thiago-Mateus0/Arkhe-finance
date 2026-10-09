@@ -18,6 +18,12 @@ pytest
 ```
 Dados ficam em `financas.db` (SQLite, ignorado pelo git; mude com `FINANCAS_DB`).
 
+## Interface
+Mobile-first, tema escuro, em `src/financas/static/` (HTML/CSS/JS puros, sem build). Telas: **Início**, **Atividades**
+(busca, filtros e categorização por toque), **Gastos** (acumulado do mês vs. anterior e rosca por categoria),
+**Fluxo** (entradas e gastos por dia) e **Importar**. O olho no topo oculta os valores. No celular, "Adicionar à tela
+inicial" instala como app (PWA). Inspirada em apps de finanças; sem marcas ou logos de terceiros.
+
 ## Como funciona
 - `POST /import` — importa o CSV de conta ou de fatura (detecta pelo cabeçalho). Reimportar é seguro: linhas já vistas são ignoradas
   (chave = identificador + valor + descrição + contador; o ID do Nubank sozinho **não** é único).
