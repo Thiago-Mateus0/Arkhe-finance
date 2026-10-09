@@ -20,12 +20,19 @@ const now = new Date();
 const ymNow = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 const state = { view: "home", month: ymNow, hidden: store.get("hidden", false), filter: "all", q: "", category: null, flow: "geral", cache: {} };
 document.body.classList.toggle("hide", state.hidden);
+state.theme = store.get("theme", "dark") === "light" ? "light" : "dark";  // escuro é o padrão; claro é opcional
+const applyTheme = () => {
+  document.documentElement.dataset.theme = state.theme;
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = state.theme === "light" ? "#f3f2ee" : "#0c0c0d";
+};
+applyTheme();
+const LOGO = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--accent)"/><rect x="7" y="17" width="4.5" height="8" rx="2.25" fill="var(--on-accent)"/><rect x="13.75" y="12" width="4.5" height="13" rx="2.25" fill="var(--on-accent)"/><rect x="20.5" y="7" width="4.5" height="18" rx="2.25" fill="var(--on-accent)"/></svg>`;
 
 /* ---------- categorias: cor por entidade (nunca por ranking) e ícone ---------- */
 const CATS = {
   "Transporte": [1, "🚗"], "Delivery": [2, "🛵"], "Mercado": [3, "🛒"], "Alimentação": [4, "🍽️"],
   "Saúde": [5, "💊"], "Educação": [6, "🎓"], "Moradia": [7, "🏠"], "Compras": [8, "🛍️"],
-  "Celular": [0, "📱"], "Assinaturas": [0, "🔁"], "Lazer": [0, "🎟️"], "Cuidados": [0, "💈"], "Sem categoria": [0, "❔"],
+  "Celular": [0, "📱"], "Assinaturas": [0, "🔁"], "Lazer": [0, "🎟️"], "Cuidados": [0, "💈"], "Sem categoria": [0, "🏷️"],
 };
 const catColor = (n) => `var(--c${(CATS[n] || [0])[0]})`;
 const catIcon = (n) => (CATS[n] || [0, "•"])[1];
@@ -47,6 +54,9 @@ const ICON = {
   eyeOff: I('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/>'),
   left: I('<path d="M15 6l-6 6 6 6"/>'),
   right: I('<path d="M9 6l6 6-6 6"/>'),
+  sun: I('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
+  moon: I('<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>'),
+  upload: I('<path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>'),
   search: I('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>'),
 };
 
@@ -160,7 +170,7 @@ function donut(rows, total) {
 }
 
 /* ---------- peças de UI ---------- */
-const hdrButtons = () => `<button class="round" data-act="eye" aria-label="${state.hidden ? "Mostrar valores" : "Ocultar valores"}">${state.hidden ? ICON.eyeOff : ICON.eye}</button>`;
+const hdrButtons = () => `<div class="row" style="gap:8px"><button class="round" data-act="theme" aria-label="${state.theme === "dark" ? "Usar tema claro" : "Usar tema escuro"}">${state.theme === "dark" ? ICON.sun : ICON.moon}</button><button class="round" data-act="eye" aria-label="${state.hidden ? "Mostrar valores" : "Ocultar valores"}">${state.hidden ? ICON.eyeOff : ICON.eye}</button></div>`;
 const monthPill = () => `<div class="pill"><button data-act="prev" aria-label="Mês anterior">${ICON.left}</button><span>${ymLabel(state.month)}</span><button data-act="next" aria-label="Próximo mês" ${state.month >= ymNow ? "disabled style='opacity:.3'" : ""}>${ICON.right}</button></div>`;
 const backHdr = (extra = "") => `<div class="hdr"><button class="round" data-go="home" aria-label="Voltar">${ICON.left}</button><div class="row">${extra}${hdrButtons()}</div></div>`;
 const prettyName = (t) => (t.account === "nubank_conta" && t.counterparty)
@@ -185,13 +195,14 @@ async function viewHome() {
   const cats = catRows(rep), pend = cats.find((c) => c.nome === "Sem categoria");
   const top = cats.slice(0, 3), rest = cats.length - top.length;
   const saldo = rep.receitas_total - rep.gastos_total;
-  return `<div class="hdr">${monthPill()}${hdrButtons()}</div>
+  return `<div class="brand brand-m">${LOGO}<span>Finanças</span></div>
+  <div class="hdr">${monthPill()}${hdrButtons()}</div>
   <h1 class="greet">${greeting()} 👋</h1>
   <div class="stack">
+    ${pend ? `<button class="card full" data-go="activity" data-filter="uncat"><div class="lbl"><span>Para categorizar</span>${ICON.right}</div>
+      <div class="mid" style="margin-top:6px">${pend.qtd} ${pend.qtd === 1 ? "transação" : "transações"} · ${money(pend.valor)}</div><div class="muted small">Toque para classificar</div></button>` : ""}
     <button class="card" data-go="spend"><div class="lbl"><span>Gastos do mês</span>${ICON.right}</div>
       <div class="big">${money(rep.gastos_total)}</div>${lineChart({ cur, prev, upto, mini: true })}</button>
-    ${pend ? `<button class="card" data-go="activity" data-filter="uncat"><div class="lbl"><span>Para categorizar</span>${ICON.right}</div>
-      <div class="mid" style="margin-top:6px">${pend.qtd} ${pend.qtd === 1 ? "transação" : "transações"} · ${money(pend.valor)}</div><div class="muted small">Toque para classificar</div></button>` : ""}
     <div class="card"><div class="lbl"><span>Categorias</span></div>
       <div class="seg" role="img" aria-label="Distribuição dos gastos">${top.map((c) => `<i style="flex:${c.valor};--cc:${c.cor}"></i>`).join("") || `<i style="flex:1;--cc:var(--card-2)"></i>`}</div>
       ${top.map((c) => `<button class="item" data-go="activity" data-cat="${esc(c.nome)}"><span class="ico sm" style="--cc:${c.cor}">${catIcon(c.nome)}</span><span class="grow"><div class="nm">${esc(c.nome)}</div><div class="muted small">${pct(c.pct)}</div></span><span class="amt">${money(c.valor)}</span></button>`).join("") || `<p class="empty">Sem gastos neste mês.</p>`}
@@ -306,13 +317,13 @@ const closeSheet = () => { $sheet.hidden = true; $sheet.innerHTML = ""; };
 /* ---------- navegação e render ---------- */
 const VIEWS = { home: viewHome, spend: viewSpend, activity: viewActivity, flow: viewFlow, import: viewImport };
 function renderNav() {
-  const b = (v, ic, label) => `<button data-go="${v}" aria-label="${label}" ${state.view === v ? 'aria-current="page"' : ""}>${ICON[ic]}</button>`;
-  $nav.innerHTML = `<div class="pillnav">${b("home", "home", "Início")}${b("activity", "list", "Atividades")}${b("spend", "pie", "Gastos")}${b("flow", "flow", "Fluxo")}</div>
-    <button class="plus" data-go="import" aria-label="Importar CSV">${ICON.plus}</button>`;
+  const t = (v, ic, label) => `<button class="tab" data-go="${v}" ${state.view === v ? 'aria-current="page"' : ""}>${ICON[ic]}<span>${label}</span></button>`;
+  $nav.innerHTML = `<div class="brand">${LOGO}<span>Finanças</span></div><div class="tabs">${t("home", "home", "Início")}${t("activity", "list", "Atividades")}${t("spend", "pie", "Gastos")}${t("flow", "flow", "Fluxo")}${t("import", "upload", "Importar")}</div>`;
 }
 async function render() {
   renderNav();
   try {
+    $app.dataset.view = state.view;
     $app.innerHTML = await VIEWS[state.view]();
   } catch (e) {
     $app.innerHTML = `<div class="card"><b>Não foi possível carregar</b><p class="muted" style="margin-top:6px">${esc(e.message)}</p><button class="btn" style="margin-top:14px" data-go="home">Tentar de novo</button></div>`;
@@ -363,6 +374,7 @@ document.addEventListener("click", async (ev) => {
     return;
   }
   if (d.tx) return openSheet(Number(d.tx));
+  if (d.act === "theme") { state.theme = state.theme === "dark" ? "light" : "dark"; store.set("theme", state.theme); applyTheme(); return render(); }
   if (d.act === "eye") { state.hidden = !state.hidden; store.set("hidden", state.hidden); document.body.classList.toggle("hide", state.hidden); return render(); }
   if (d.act === "prev" || d.act === "next") { const m = ymShift(state.month, d.act === "prev" ? -1 : 1); if (m <= ymNow) { state.month = m; render(); } return; }
   if (d.flow) { state.flow = d.flow; return render(); }

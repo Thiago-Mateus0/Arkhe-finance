@@ -6,14 +6,15 @@
 <meta name="theme-color" content="#0c0c0d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<script>try{var t=JSON.parse(localStorage.getItem("theme"));if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/static/style.css">
 <title>Finanças</title>
 </head>
 <body>
-<main id="app" aria-live="polite"></main>
 <nav id="nav" aria-label="Navegação"></nav>
+<main id="app" aria-live="polite"></main>
 <div id="sheet" hidden></div>
 <script src="/static/app.js"></script>
 </body>

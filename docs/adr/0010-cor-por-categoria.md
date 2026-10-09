@@ -17,4 +17,4 @@ Cada categoria conhecida tem **uma cor fixa**, tirada de uma paleta categórica 
 
 - A paleta passou em todas as verificações; a separação para daltonismo fica perto do mínimo recomendado, por isso as fatias da rosca têm folga e a lista as nomeia.
 - Só 8 categorias têm cor. Uma categoria nova do usuário aparece em cinza até haver decisão de como atribuir cores a categorias livres (`docs/pendencias.md`).
-- Tema claro não existe ainda.
+- Tema claro: ver ADR 0014.
