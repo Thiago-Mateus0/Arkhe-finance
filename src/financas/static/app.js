@@ -24,8 +24,8 @@ document.body.classList.toggle("hide", state.hidden);
 /* ---------- categorias: cor por entidade (nunca por ranking) e ícone ---------- */
 const CATS = {
   "Transporte": [1, "🚗"], "Delivery": [2, "🛵"], "Mercado": [3, "🛒"], "Alimentação": [4, "🍽️"],
-  "Saúde": [5, "💊"], "Educação": [6, "🎓"], "Celular": [7, "📱"], "Compras": [8, "🛍️"],
-  "Assinaturas": [0, "🔁"], "Lazer": [0, "🎟️"], "Sem categoria": [0, "❔"],
+  "Saúde": [5, "💊"], "Educação": [6, "🎓"], "Moradia": [7, "🏠"], "Compras": [8, "🛍️"],
+  "Celular": [0, "📱"], "Assinaturas": [0, "🔁"], "Lazer": [0, "🎟️"], "Cuidados": [0, "💈"], "Sem categoria": [0, "❔"],
 };
 const catColor = (n) => `var(--c${(CATS[n] || [0])[0]})`;
 const catIcon = (n) => (CATS[n] || [0, "•"])[1];

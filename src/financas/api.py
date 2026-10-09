@@ -10,12 +10,10 @@ from . import db, service
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    """Banco novo (sem regras nem transações) já nasce com as regras padrão."""
+    """Primeira execução: carrega as regras padrão (uma vez só)."""
     conn = db.connect()
     try:
-        empty = not conn.execute("SELECT 1 FROM rules UNION ALL SELECT 1 FROM transactions LIMIT 1").fetchone()
-        if empty:
-            service.seed_default_rules(conn)
+        service.seed_default_rules_once(conn)
     finally:
         conn.close()
     yield

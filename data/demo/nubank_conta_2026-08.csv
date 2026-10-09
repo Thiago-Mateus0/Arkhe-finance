@@ -1,0 +1,49 @@
+Data,Valor,Identificador,Descrição
+02/08/2026,10.00,f7fa86ec-063b-5d66-8f86-d906849ccb23,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+02/08/2026,10.00,58f9e9a7-96ac-586a-827c-c91bb63f512b,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+02/08/2026,-20.00,42995454-132e-5737-8720-066242934eed,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+02/08/2026,40.00,ab88ae56-d018-5118-b5d2-c7976065a2f1,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+02/08/2026,-40.00,286f1572-0fe0-5c63-976d-fb3b4743cb42,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+05/08/2026,3200.00,7c9b3d55-8311-5aff-9153-bb96a5618ab2,Transferência Recebida - TECNOVA SISTEMAS LTDA - 11.111.111/0001-11 - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+06/08/2026,15.00,2970fe52-b4b8-5562-a943-ae351382854b,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+06/08/2026,10.00,f2885c6c-f686-51f0-b97a-ea2e57c3da2e,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+06/08/2026,-25.00,c3560066-f7cb-5e24-b541-ae0b219f47b2,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+06/08/2026,20.00,eca3f996-4361-5911-a072-27d64c98d2f1,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+06/08/2026,-20.00,e40cb582-993b-521e-83de-0b5007184fb7,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+07/08/2026,-900.00,c396883f-deab-5cb4-97a5-56e7f8f030a0,Transferência enviada pelo Pix - IMOBILIARIA SOL LTDA - 33.333.333/0001-33 - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+08/08/2026,-39.90,4ebbdfc3-dcd7-574c-8fb1-76ff8e55bd0b,Transferência enviada pelo Pix - PADARIA PAO QUENTE LTDA - 44.444.444/0001-44 - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+09/08/2026,10.00,c0bead8b-c0a0-5043-8456-a93b94628b23,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+09/08/2026,30.00,4b6dba9c-da05-539f-89b8-18ca9f466479,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+09/08/2026,-40.00,8d3afc1b-7c2f-5a40-a0b3-bd90aa57d0da,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+09/08/2026,20.00,d38f4a60-d6c3-5aa0-bfc0-54801b37a52d,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+09/08/2026,-20.00,2b3dccad-b652-53ff-8672-a0dc77cc4bfa,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+10/08/2026,120.00,9fdddbc8-1d79-55e6-a5c2-a6daf1cf59ff,Valor adicionado na conta por cartão de crédito - Valor adicionado para Pix no Crédito
+10/08/2026,-120.00,9fdddbc8-1d79-55e6-a5c2-a6daf1cf59ff,Transferência enviada pelo Pix - BARBEARIA DO ZE LTDA - 55.555.555/0001-55 - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+12/08/2026,-85.00,9fd45e6e-ba36-5855-b4f3-e644bf9c9710,Transferência enviada pelo Pix - CARLA MENDES FERREIRA - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+12/08/2026,-40.00,be18fb9e-ff04-5124-ba2a-5a7e2c3a45af,Transferência enviada pelo Pix - RAFAEL TORRES - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+13/08/2026,25.00,8aee9c00-9305-579b-b09d-9af2407b1e8d,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+13/08/2026,10.00,ec37d6f0-5adf-519b-b33f-eb8e2a63b16c,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+13/08/2026,-35.00,d847d64f-42e9-51d5-8004-84cd755b1ea4,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+13/08/2026,20.00,ef9a479c-ff59-5c25-a3e4-2375e51ed817,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+13/08/2026,-20.00,fa44ff2a-c09c-5d47-8b19-d31bd0192304,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+14/08/2026,-289.90,89a53afc-c9b2-5828-9bea-e7951a975339,Transferência enviada pelo Pix - SOCIEDADE EDUCACIONAL HORIZONTE LTDA - 66.666.666/0001-66 - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+15/08/2026,-300.00,01f652c4-45d0-5100-8339-3dc71657b274,Transferência enviada pelo Pix - JOAO PEDRO ALMEIDA - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+15/08/2026,300.00,64a7bef8-05fd-59dc-9161-7ec40c71131f,Transferência recebida pelo Pix - JOAO PEDRO ALMEIDA - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+16/08/2026,10.00,2180849f-5796-5780-9b85-777f3224f667,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+16/08/2026,10.00,5991e038-5653-5bb1-b2b0-d2291c1ef70b,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+16/08/2026,-20.00,0d3ce222-962e-573d-bbaf-7bd804c82a80,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+16/08/2026,20.00,96edff75-ed07-5c89-bb42-6a5b68f56a3e,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+16/08/2026,-20.00,316a5795-97c3-57aa-aa08-f472d3d79fa0,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+18/08/2026,-59.90,06a0c71a-a3bf-5e11-bad4-f220ad520093,Transferência enviada pelo Pix - ACADEMIA FORMA FISICA LTDA - 77.777.777/0001-77 - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+20/08/2026,10.00,f701608c-6efa-5f9c-850d-d5e5b737cc53,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+20/08/2026,30.00,cf35d5a9-99f5-5ad0-8a9e-4d2f6cb47a28,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+20/08/2026,-40.00,b58a5eee-40a6-5c7b-b056-d9cf741163d4,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+20/08/2026,20.00,6fd493bf-ad14-5282-959c-1e4839f5cf81,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+20/08/2026,-20.00,0815b374-e0ae-5509-86a7-581d3a16956e,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+21/08/2026,150.00,0b253020-33aa-57bb-95ae-aa66a6b02d0f,Transferência recebida pelo Pix - MARIA ALMEIDA - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+24/08/2026,25.00,33c1fc8e-e800-5503-8d37-9b1fa5c77656,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+24/08/2026,10.00,c928abc5-00e6-53b5-bf83-2a617a04b2c0,Transferência recebida pelo Pix - BIA CARVALHO - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+24/08/2026,-35.00,11b78676-982b-503d-9de1-4aaa17ded98a,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+24/08/2026,40.00,41fad087-de69-5054-978d-553aba793969,Transferência recebida pelo Pix - LUCAS ANDRADE - •••.123.456-•• - NU PAGAMENTOS - IP (0260) Agência: 1 Conta: 1234567-8
+24/08/2026,-40.00,4f31bdcf-5dac-563d-8b99-ea61f8887b1b,Transferência enviada pelo Pix via Open Banking - Iniciada por: PagFacil - LOJA DE INGRESSOS EXEMPLO LTDA - 22.222.222/0001-22 - BANCO EXEMPLO S.A. Agência: 1 Conta: 99-9
+25/08/2026,-612.38,f666be99-5f0d-58ef-8d05-7861aaf1bc66,Pagamento de fatura

@@ -185,3 +185,13 @@ def daily_report(conn: sqlite3.Connection, month: str) -> dict:
         "anterior": [{"dia": d, "gastos": prev_spend.get(d, 0) / 100}
                      for d in range(1, _days_in_month(_month_before(month)) + 1)],
     }
+
+
+def seed_default_rules_once(conn: sqlite3.Connection) -> bool:
+    """Carrega as regras padrão na primeira vez que o banco é usado; depois respeita o que você apagou."""
+    if conn.execute("SELECT 1 FROM meta WHERE key='default_rules_seeded'").fetchone():
+        return False
+    seed_default_rules(conn)
+    conn.execute("INSERT INTO meta (key, value) VALUES ('default_rules_seeded', '1')")
+    conn.commit()
+    return True
