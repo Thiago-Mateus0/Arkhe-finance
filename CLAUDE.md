@@ -2,7 +2,7 @@
 
 App pessoal de finanças: importa o CSV de conta e de fatura do Nubank, classifica cada lançamento, categoriza por regras e mostra para onde o dinheiro vai. Roda **local** (SQLite), com interface web pensada para celular. Um projeto solo, que resolve uma necessidade real e também serve de portfólio.
 
-**Fase atual: 3 — uso real.** Fases 0–2 (descoberta, importação/classificação e interface) estão fechadas e documentadas. Não reabra decisão de fase anterior sem ADR. As fases ficam em `docs/pendencias.md`.
+**Onde estamos:** Levantamento e Arquitetura fechados; **Design fechado** (identidade própria, tema claro opcional, computador); **Código** em andamento, com a fase 3 (uso real) logo depois. Não reabra decisão de etapa anterior sem ADR. O quadro completo está em `docs/pendencias.md`.
 
 Pessoa: **Thiago** (dono, decide produto e regra de dinheiro; não é obrigado a ler código — vê o resultado e o PR).
 

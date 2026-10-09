@@ -8,18 +8,39 @@ Nasceu de uma necessidade pessoal: ter visão do próprio dinheiro a partir do q
 
 ## Telas
 
-Capturas em celular (390×844), com os dados fictícios de `data/demo/`.
+Capturas com os dados fictícios de `data/demo/`. A interface é **inspirada em apps de finanças modernos** (cartões, gráfico acumulado, lista por dia); a identidade visual — cor, marca e navegação — é própria. O tema escuro é o padrão e o **claro é opcional** (botão no topo).
+
+**Celular, tema escuro** (390×844)
 
 <table>
 <tr>
-<td><img src="docs/img/inicio.png" width="230" alt="Início"><br><b>Início</b>: gastos do mês, pendentes e categorias</td>
+<td><img src="docs/img/inicio.png" width="230" alt="Início"><br><b>Início</b>: pendentes, gastos e categorias</td>
 <td><img src="docs/img/gastos.png" width="230" alt="Gastos"><br><b>Gastos</b>: acumulado contra o mês anterior</td>
 <td><img src="docs/img/gastos-categorias.png" width="230" alt="Categorias"><br><b>Categorias</b>: rosca e lista</td>
 </tr>
 <tr>
-<td><img src="docs/img/atividades.png" width="230" alt="Atividades"><br><b>Atividades</b>: busca, filtros, agrupado por dia</td>
+<td><img src="docs/img/atividades.png" width="230" alt="Atividades"><br><b>Atividades</b>: busca, filtros, por dia</td>
 <td><img src="docs/img/categorizar.png" width="230" alt="Categorizar"><br><b>Categorizar</b>: um toque, com "lembrar"</td>
 <td><img src="docs/img/fluxo.png" width="230" alt="Fluxo"><br><b>Fluxo</b>: receitas e gastos por dia</td>
+</tr>
+</table>
+
+**Tema claro (opcional)**
+
+<table>
+<tr>
+<td><img src="docs/img/inicio-claro.png" width="230" alt="Início, tema claro"></td>
+<td><img src="docs/img/gastos-claro.png" width="230" alt="Gastos, tema claro"></td>
+<td><img src="docs/img/atividades-claro.png" width="230" alt="Atividades, tema claro"></td>
+</tr>
+</table>
+
+**Computador** (menu lateral e cartões em duas colunas)
+
+<table>
+<tr>
+<td><img src="docs/img/computador.png" width="460" alt="Computador, tema escuro"></td>
+<td><img src="docs/img/computador-claro.png" width="460" alt="Computador, tema claro"></td>
 </tr>
 </table>
 
@@ -56,7 +77,7 @@ O app classifica cada lançamento em um tipo e só conta como gasto o que é gas
 | Repasse: pareamento exato e por soma, sem esconder gasto de verdade | [ADR 0005](docs/adr/0005-repasse.md) |
 | Categorias por regras, em vez de IA enviando extrato a uma API | [ADR 0006](docs/adr/0006-categorias.md) |
 | Repositório público, dados reais fora do git, demonstração fictícia | [ADR 0007](docs/adr/0007-dado-real-fora-do-git.md) |
-| Interface sem build e cor fixa por categoria (paleta validada para daltonismo) | [ADR 0009](docs/adr/0009-interface-sem-build.md), [0010](docs/adr/0010-cor-por-categoria.md) |
+| Interface sem build, cor fixa por categoria (paleta validada para daltonismo), identidade própria e tema claro opcional | [ADR 0009](docs/adr/0009-interface-sem-build.md), [0010](docs/adr/0010-cor-por-categoria.md), [0014](docs/adr/0014-identidade-visual-e-temas.md) |
 
 Spec diz **o que** o sistema faz (`docs/spec/`); ADR diz **por quê** (`docs/adr/`). **ADR aceito não se edita:** decisão nova revoga a antiga com outro ADR.
 

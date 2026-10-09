@@ -1,6 +1,6 @@
 # Spec — Interface
 
-Mobile-first, tema escuro, sem build. Código em `src/financas/static/`. O "porquê" está nos ADRs 0009 e 0010.
+Mobile-first, sem build. Código em `src/financas/static/`. O "porquê" está nos ADRs 0009, 0010 e 0014.
 
 ## Telas
 
@@ -11,6 +11,12 @@ Mobile-first, tema escuro, sem build. Código em `src/financas/static/`. O "porq
 | **Gastos** | Gasto acumulado do mês contra o mês anterior (linha tracejada), com valor por dia ao tocar; rosca e lista de categorias; tabela de valores por dia |
 | **Fluxo** | Receitas e gastos por dia (Geral, Entradas, Saídas) e saldo do mês |
 | **Importar** | Escolher ou arrastar vários CSV; resultado por arquivo |
+
+## Navegação e temas
+
+- **Celular:** barra de abas com rótulos (Início, Atividades, Gastos, Fluxo, Importar), fixa embaixo.
+- **Computador (a partir de 900 px):** menu lateral com a marca; conteúdo centralizado; no Início, cartões em duas colunas.
+- **Tema:** escuro por padrão. Um botão (sol/lua) no topo alterna entre escuro e claro; a escolha fica guardada no navegador e é aplicada antes de desenhar a tela, para não piscar.
 
 ## Comportamentos
 
