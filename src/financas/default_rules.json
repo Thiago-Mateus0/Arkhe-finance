@@ -25,6 +25,11 @@
   "priority": 10
   },
   {
+  "pattern": "ifd*",
+  "category": "Delivery",
+  "priority": 10
+  },
+  {
   "pattern": "99food",
   "category": "Delivery",
   "priority": 10

@@ -1,6 +1,6 @@
 # ADR 0005 — Repasse: pareamento exato e por soma
 
-- **Status:** Proposto — aguarda revisão do Thiago
+- **Status:** Aceito
 - **Data:** 2026-10-08
 - **Fase:** 1 — Fundação
 - **Decidido por:** Claude, por delegação do Thiago ("tome as melhores decisões"); **aguarda revisão do Thiago**

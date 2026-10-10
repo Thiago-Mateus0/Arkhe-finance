@@ -1,6 +1,6 @@
 # ADR 0009 — Interface em JS puro, mobile-first, instalável
 
-- **Status:** Proposto — aguarda revisão do Thiago
+- **Status:** Aceito
 - **Data:** 2026-10-09
 - **Fase:** 2 — Interface
 - **Decidido por:** Claude, por delegação do Thiago ("tome as melhores decisões"); **aguarda revisão do Thiago**

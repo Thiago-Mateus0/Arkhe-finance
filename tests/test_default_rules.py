@@ -17,6 +17,8 @@ def conn(tmp_path):
     ("99Food", "Delivery"),
     ("iFood *Restaurante X", "Delivery"),  # ifood (prioridade 10) vence 'restaurante'
     ("Uber *Eats", "Delivery"),  # Uber Eats não é corrida
+    ("IFD*Restaurante X", "Delivery"),  # IFD* é como o iFood aparece na fatura
+    ("IFD*PADARIA EXEMPLO", "Delivery"),
     ("Sua Academia", "Saúde"),
     ("Recarga de celular", "Celular"),
     ("Transferência enviada pelo Pix - IMOBILIARIA SOL LTDA", "Moradia"),

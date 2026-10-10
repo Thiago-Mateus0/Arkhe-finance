@@ -11,7 +11,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | **Levantamento** | ✅ fechado | Quem usa, CSV antes de Open Finance, bancos, objetivo, o que fica para depois | ADRs 0001, 0002, 0006, 0008, 0012, 0013 |
 | **Arquitetura** | ✅ fechado | Stack, o que conta como gasto, chave de duplicata, repasse, dinheiro em centavos | Specs `importacao`, `classificacao`, `categorias`, `relatorios`; ADRs 0003 a 0005 e 0011 |
 | **Design** | ✅ fechado | Telas, cores por categoria, identidade própria, tema claro opcional, layout de computador | Spec `interface`; ADRs 0009, 0010, 0014 |
-| **Código** | 🟡 em andamento | Importador, classificação, regras, relatórios e telas estão prontos. O resto depende de uso real (abaixo) | `src/`, `tests/` |
+| **Código** | 🟡 em andamento | Importador, classificação, regras, relatórios e telas prontos; uso real (fase 3) concluído. Falta o controle (fase 4 em diante) | `src/`, `tests/` |
 
 **Numeração antiga das fases** (usada nos ADRs, que não se editam depois de aceitos): 0 e 1 = Levantamento e Arquitetura; 2 = Design; 3 em diante = Código. Fase 3 (uso real) é a etapa de código em que você usa o app e aponta o que falta.
 
@@ -19,8 +19,8 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 
 | Fase | Objetivo | Estado |
 |---|---|---|
-| 3 · Uso real | Rodar no dia a dia, importar vários meses, corrigir o que incomodar | **próxima** |
-| 4 · Controle | Orçamento por categoria, assinaturas, parcelas futuras, tela de regras | aguardando a fase 3 |
+| 3 · Uso real | Rodar no dia a dia, importar vários meses, corrigir o que incomodar | ✅ concluída: meses fechados, o que sobrou sem categoria fica |
+| 4 · Controle | Orçamento por categoria, assinaturas, parcelas futuras, tela de regras | **próxima** |
 | 5 · Patrimônio | Saldos e investimentos informados à mão, metas, exportação e backup | aguardando |
 | 6 · Automático e compartilhado | Open Finance, login, hospedagem, uso por duas pessoas | aguardando |
 
@@ -45,5 +45,5 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 ## Antes de divulgar como portfólio
 
 - [ ] O Thiago revisa e ajusta `docs/processo-de-trabalho.md` para refletir como ele realmente trabalha.
-- [ ] O Thiago revisa os ADRs marcados **Proposto** (0003, 0004, 0005, 0007, 0009, 0010, 0011, 0014) e muda o status para **Aceito** ou revoga com um ADR novo.
+- [x] O Thiago revisou e aceitou os ADRs que estavam **Propostos** (0003, 0004, 0005, 0007, 0009, 0010, 0011, 0014).
 - [ ] Conferir o histórico do git por dado pessoal antes de tornar o repositório mais visível.
