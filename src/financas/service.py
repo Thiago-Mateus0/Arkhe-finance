@@ -45,22 +45,22 @@ def import_csv(conn: sqlite3.Connection, content: str | bytes) -> dict:
 
 
 def reclassify(conn: sqlite3.Connection) -> None:
-    """Recalcula o tipo das linhas de conta (nomes próprios e passagem dependem do conjunto todo)
-    e das linhas de fatura que dependem de nome próprio (Pix no crédito)."""
+    """Recalcula o tipo das linhas de conta e de fatura. Nome próprio, repasse e Pix no crédito
+    dependem do conjunto todo (conta e fatura juntas), por isso rodam sempre sobre tudo."""
     own = get_own_names(conn)
     rows = [dict(r) for r in conn.execute(
         "SELECT id, date, source_id, amount_cents, description, counterparty FROM transactions"
         " WHERE household_id=? AND account='nubank_conta'", (HOUSEHOLD,))]
     for r in rows:
         r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own)
-    classifier.mark_passthrough(rows)
     faturas = [dict(r) for r in conn.execute(
-        "SELECT id, description, amount_cents FROM transactions WHERE household_id=? AND account='nubank_fatura'",
+        "SELECT id, date, description, amount_cents FROM transactions WHERE household_id=? AND account='nubank_fatura'",
         (HOUSEHOLD,))]
     for r in faturas:
         r["kind"] = classifier.classify_fatura(r["description"], r["amount_cents"], own)
-    rows += faturas
-    conn.executemany("UPDATE transactions SET kind=? WHERE id=?", [(r["kind"], r["id"]) for r in rows])
+    classifier.pair_pix_no_credito(rows, faturas)
+    classifier.mark_passthrough(rows)
+    conn.executemany("UPDATE transactions SET kind=? WHERE id=?", [(r["kind"], r["id"]) for r in rows + faturas])
     conn.commit()
 
 
