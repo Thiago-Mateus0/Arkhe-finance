@@ -41,7 +41,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P8 | Open Finance: qual agregador e qual o custo real? | Fase 6 | Pesquisar só quando chegar a fase 6 |
 | P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Hospedagem simples com login; **a API atual não pode ser exposta** (ADR 0008) |
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
-| P11 | Nome do app: "Finanças" é genérico; a identidade visual já é própria, o nome ainda não | Antes de divulgar | O Thiago escolhe; trocar é só texto e o logo |
+| P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; falta só refazer as capturas de tela em `docs/img/` | 
 
 ## Antes de divulgar como portfólio
 

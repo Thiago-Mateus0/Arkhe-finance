@@ -1,7 +1,7 @@
 [project]
 name = "financas"
 version = "0.1.0"
-description = "Finanças pessoais: importa CSV do Nubank, categoriza por regras e mostra gastos por categoria."
+description = "Arkhe Finance — finanças pessoais: importa CSV do Nubank, categoriza por regras e mostra gastos por categoria."
 requires-python = ">=3.11"
 dependencies = ["fastapi", "uvicorn", "python-multipart"]
 

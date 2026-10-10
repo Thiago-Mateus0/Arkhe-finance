@@ -1,4 +1,4 @@
-# Finanças
+# Arkhe Finance
 
 App pessoal de finanças: importa o CSV de conta e de fatura do Nubank, classifica cada lançamento, categoriza por regras e mostra para onde o dinheiro vai. Roda **local** (SQLite), com interface web pensada para celular. Um projeto solo, que resolve uma necessidade real e também serve de portfólio.
 
