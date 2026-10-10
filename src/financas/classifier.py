@@ -1,4 +1,5 @@
 """Define o tipo de cada transação. Só 'expense' entra no total de gastos."""
+import re
 from datetime import date
 from itertools import combinations
 
@@ -12,9 +13,20 @@ PASSTHROUGH = "passthrough"  # recebeu e repassou o mesmo valor no mesmo dia
 EXCLUDED_FROM_SPENDING = {TRANSFER, CARD_PAYMENT, CREDIT_FUNDING, PASSTHROUGH, INCOME}
 
 
-def classify_fatura(description: str, amount_cents: int) -> str:
+_PIX_NO_CREDITO = re.compile(r"^pix no crédito - (?P<nome>.+?)(?: - \d+/\d+)?$", re.IGNORECASE)
+
+
+def _pix_no_credito_para(description: str, own_names: set[str]) -> bool:
+    """Pix no crédito (com ou sem parcela) cujo destino é uma conta do próprio dono."""
+    m = _PIX_NO_CREDITO.match(" ".join(description.split()))
+    return bool(m) and " ".join(m.group("nome").split()).upper() in own_names
+
+
+def classify_fatura(description: str, amount_cents: int, own_names: set[str] = frozenset()) -> str:
     if description.lower().startswith("pagamento recebido"):
         return CARD_PAYMENT
+    if _pix_no_credito_para(description, own_names):
+        return TRANSFER  # o dinheiro só mudou de bolso; o gasto real é quando ele for usado
     return EXPENSE  # inclui estornos (valor positivo = reduz o gasto)
 
 
