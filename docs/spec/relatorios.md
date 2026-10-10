@@ -19,6 +19,10 @@ Tudo é calculado sobre `gasto` e `receita` (ver `classificacao.md`). Valores sa
 
 Filtros: `month` (obrigatório), `category`, `kind` ou `kinds` (lista separada por vírgula), `q` (busca em descrição e contraparte, sem diferenciar maiúsculas; vazio é ignorado), `desc=true` (mais recentes primeiro).
 
+## Meses com dados — `GET /months`
+
+Lista `aaaa-mm` dos meses que têm algum lançamento, do mais recente para o mais antigo. A tela usa para abrir no último mês com dados.
+
 ## Comparação com o mês anterior
 
 A tela compara o gasto acumulado até o **mesmo dia** do mês anterior, não o total do mês anterior inteiro; num mês fechado, os dois coincidem.

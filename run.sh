@@ -12,6 +12,10 @@ if [ "${1:-}" = "demo" ]; then
   rm -f "$FINANCAS_DB"
   python scripts/gerar_demo.py >/dev/null
   python -m financas import data/demo/*.csv
+  python -m financas orcamento "Transporte" 250 >/dev/null
+  python -m financas orcamento "Delivery" 135 >/dev/null
+  python -m financas orcamento "Alimentação" 200 >/dev/null
+  python -m financas orcamento "Saúde" 100 >/dev/null
 fi
 if [ "${1:-}" = "import" ]; then shift; exec python -m financas import "$@"; fi
 exec uvicorn financas.api:app --host 127.0.0.1 --port 8000

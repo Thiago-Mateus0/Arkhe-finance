@@ -23,6 +23,10 @@ Capturas com os dados fictícios de `data/demo/`. A interface é **inspirada em 
 <td><img src="docs/img/categorizar.png" width="230" alt="Categorizar"><br><b>Categorizar</b>: um toque, com "lembrar"</td>
 <td><img src="docs/img/fluxo.png" width="230" alt="Fluxo"><br><b>Fluxo</b>: receitas e gastos por dia</td>
 </tr>
+<tr>
+<td><img src="docs/img/orcamento.png" width="230" alt="Orçamento"><br><b>Orçamento</b>: limite por categoria, com aviso</td>
+<td></td><td></td>
+</tr>
 </table>
 
 **Tema claro (opcional)**
@@ -32,6 +36,7 @@ Capturas com os dados fictícios de `data/demo/`. A interface é **inspirada em 
 <td><img src="docs/img/inicio-claro.png" width="230" alt="Início, tema claro"></td>
 <td><img src="docs/img/gastos-claro.png" width="230" alt="Gastos, tema claro"></td>
 <td><img src="docs/img/atividades-claro.png" width="230" alt="Atividades, tema claro"></td>
+<td><img src="docs/img/orcamento-claro.png" width="230" alt="Orçamento, tema claro"></td>
 </tr>
 </table>
 
@@ -41,6 +46,10 @@ Capturas com os dados fictícios de `data/demo/`. A interface é **inspirada em 
 <tr>
 <td><img src="docs/img/computador.png" width="460" alt="Computador, tema escuro"></td>
 <td><img src="docs/img/computador-claro.png" width="460" alt="Computador, tema claro"></td>
+</tr>
+<tr>
+<td><img src="docs/img/computador-orcamento.png" width="460" alt="Orçamento no computador"></td>
+<td></td>
 </tr>
 </table>
 
@@ -66,6 +75,7 @@ O app classifica cada lançamento em um tipo e só conta como gasto o que é gas
 - **Importar é idempotente:** reimportar, ou importar arquivos que se sobrepõem, não duplica nada.
 - **Dinheiro em centavos inteiros**, nunca `float`.
 - **Categoria manual trava:** nenhuma regra futura a sobrescreve.
+- **Orçamento por categoria:** limite mensal fixo, com aviso a partir de 80% e quando estoura; o estado vai em texto e ícone, não só em cor.
 - **Interface sem build:** HTML, CSS e JS puros, gráficos em SVG escritos à mão.
 
 ## Decisões de engenharia que valem uma olhada
@@ -77,6 +87,7 @@ O app classifica cada lançamento em um tipo e só conta como gasto o que é gas
 | Repasse: pareamento exato e por soma, sem esconder gasto de verdade | [ADR 0005](docs/adr/0005-repasse.md) |
 | Categorias por regras, em vez de IA enviando extrato a uma API | [ADR 0006](docs/adr/0006-categorias.md) |
 | Repositório público, dados reais fora do git, demonstração fictícia | [ADR 0007](docs/adr/0007-dado-real-fora-do-git.md) |
+| Orçamento: limite fixo, aviso a 80%, comparação em centavos sem arredondar | [ADR 0015](docs/adr/0015-orcamento-por-categoria.md), [spec](docs/spec/orcamento.md) |
 | Interface sem build, cor fixa por categoria (paleta validada para daltonismo), identidade própria e tema claro opcional | [ADR 0009](docs/adr/0009-interface-sem-build.md), [0010](docs/adr/0010-cor-por-categoria.md), [0014](docs/adr/0014-identidade-visual-e-temas.md) |
 
 Spec diz **o que** o sistema faz (`docs/spec/`); ADR diz **por quê** (`docs/adr/`). **ADR aceito não se edita:** decisão nova revoga a antiga com outro ADR.

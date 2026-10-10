@@ -1,10 +1,12 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+from decimal import Decimal
+
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from . import db, service
 
@@ -103,6 +105,36 @@ def set_category(tx_id: int, body: CategoryIn, conn=Depends(get_conn)):
 @app.get("/categories")
 def categories(conn=Depends(get_conn)):
     return service.list_categories(conn)
+
+
+class BudgetIn(BaseModel):
+    limite: Decimal = Field(gt=0, max_digits=12, decimal_places=2)  # em reais, no máximo 2 casas
+
+
+@app.get("/months")
+def months(conn=Depends(get_conn)):
+    return service.months_with_data(conn)
+
+
+@app.get("/budgets")
+def budgets(month: str, conn=Depends(get_conn)):
+    return service.budget_status(conn, month)
+
+
+@app.put("/budgets/{category}")
+def put_budget(category: str, body: BudgetIn, conn=Depends(get_conn)):
+    try:
+        service.set_budget(conn, category, int((body.limite * 100).to_integral_value()))
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    return {"categoria": category.strip(), "limite": float(body.limite)}
+
+
+@app.delete("/budgets/{category}")
+def remove_budget(category: str, conn=Depends(get_conn)):
+    if not service.delete_budget(conn, category):
+        raise HTTPException(404, "Orçamento não encontrado")
+    return {"ok": True}
 
 
 @app.get("/reports/daily")

@@ -195,3 +195,66 @@ def seed_default_rules_once(conn: sqlite3.Connection) -> bool:
     conn.execute("INSERT INTO meta (key, value) VALUES ('default_rules_seeded', '1')")
     conn.commit()
     return True
+
+
+# ---------- orçamento (spec: docs/spec/orcamento.md, ADR 0015) ----------
+
+BUDGET_ESTADOS = ("estourou", "atencao", "ok")  # do mais grave ao mais folgado
+
+
+def _budget_estado(spent_cents: int, limit_cents: int) -> str:
+    """Tudo em centavos inteiros, sem arredondar: 80% do limite é spent*5 >= limit*4."""
+    if spent_cents > limit_cents:
+        return "estourou"
+    if spent_cents * 5 >= limit_cents * 4:
+        return "atencao"
+    return "ok"
+
+
+def set_budget(conn: sqlite3.Connection, category: str, limit_cents: int) -> None:
+    category = category.strip()
+    if not category or len(category) > 60:
+        raise ValueError("Categoria inválida (vazia ou com mais de 60 caracteres)")
+    if category == rules.UNCATEGORIZED:
+        raise ValueError("Não dá para orçar 'Sem categoria': classifique os lançamentos antes")
+    if limit_cents <= 0:
+        raise ValueError("O limite precisa ser maior que zero")
+    conn.execute(
+        "INSERT INTO budgets (household_id, category, limit_cents) VALUES (?,?,?)"
+        " ON CONFLICT (household_id, category) DO UPDATE SET limit_cents=excluded.limit_cents",
+        (HOUSEHOLD, category, limit_cents))
+    conn.commit()
+
+
+def delete_budget(conn: sqlite3.Connection, category: str) -> bool:
+    cur = conn.execute("DELETE FROM budgets WHERE household_id=? AND category=?", (HOUSEHOLD, category.strip()))
+    conn.commit()
+    return bool(cur.rowcount)
+
+
+def budget_status(conn: sqlite3.Connection, month: str) -> dict:
+    spent = {r["category"]: r["cents"] for r in _spending_by_category(conn, month)}
+    itens = []
+    for b in conn.execute("SELECT category, limit_cents FROM budgets WHERE household_id=?", (HOUSEHOLD,)):
+        gasto, limite = spent.get(b["category"], 0), b["limit_cents"]
+        itens.append({
+            "categoria": b["category"], "limite": limite / 100, "gasto": gasto / 100,
+            "restante": (limite - gasto) / 100, "percentual": round(gasto * 100 / limite, 1),
+            "estado": _budget_estado(gasto, limite), "_ord": (BUDGET_ESTADOS.index(_budget_estado(gasto, limite)), -gasto / limite),
+        })
+    itens.sort(key=lambda i: i["_ord"])
+    for i in itens:
+        del i["_ord"]
+    return {
+        "mes": month,
+        "orcado_total": sum(round(i["limite"] * 100) for i in itens) / 100,
+        "gasto_nas_categorias": sum(round(i["gasto"] * 100) for i in itens) / 100,
+        "itens": itens,
+    }
+
+
+def months_with_data(conn: sqlite3.Connection) -> list[str]:
+    """Meses (aaaa-mm) que têm algum lançamento, do mais recente para o mais antigo."""
+    rows = conn.execute("SELECT DISTINCT substr(date, 1, 7) AS m FROM transactions WHERE household_id=? ORDER BY m DESC",
+                        (HOUSEHOLD,)).fetchall()
+    return [r["m"] for r in rows]
