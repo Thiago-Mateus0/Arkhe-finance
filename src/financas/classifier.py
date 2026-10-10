@@ -16,10 +16,14 @@ EXCLUDED_FROM_SPENDING = {TRANSFER, CARD_PAYMENT, CREDIT_FUNDING, PASSTHROUGH, I
 _PIX_NO_CREDITO = re.compile(r"^pix no crédito - (?P<nome>.+?)(?: - \d+/\d+)?$", re.IGNORECASE)
 
 
+def _nome_pix_no_credito(description: str) -> str | None:
+    m = _PIX_NO_CREDITO.match(" ".join(description.split()))
+    return " ".join(m.group("nome").split()).upper() if m else None
+
+
 def _pix_no_credito_para(description: str, own_names: set[str]) -> bool:
     """Pix no crédito (com ou sem parcela) cujo destino é uma conta do próprio dono."""
-    m = _PIX_NO_CREDITO.match(" ".join(description.split()))
-    return bool(m) and " ".join(m.group("nome").split()).upper() in own_names
+    return _nome_pix_no_credito(description) in own_names
 
 
 def classify_fatura(description: str, amount_cents: int, own_names: set[str] = frozenset()) -> str:
@@ -39,6 +43,33 @@ def classify(description: str, amount_cents: int, counterparty: str, own_names: 
     if counterparty and counterparty in own_names:
         return TRANSFER
     return INCOME if amount_cents > 0 else EXPENSE
+
+
+JANELA_PIX_NO_CREDITO_DIAS = 45
+
+
+def pair_pix_no_credito(conta: list[dict], fatura: list[dict]) -> None:
+    """Pix no crédito para terceiro conta uma vez: fica a linha da fatura, a saída da conta deixa de contar.
+
+    A saída da conta é a que tem uma entrada fictícia (CREDIT_FUNDING) com o mesmo identificador e valor
+    oposto. A fatura traz "Pix no Crédito - NOME" com valor MAIOR (custo do crédito), então o pareamento
+    é por nome, um para um, com a saída até JANELA dias antes da linha (a mais próxima primeiro).
+    Sem linha na fatura (ainda não importada) a saída continua gasto. Altera 'kind' in-place.
+    """
+    financiados = {(r["source_id"], -r["amount_cents"]) for r in conta if r["kind"] == CREDIT_FUNDING}
+    saidas = [r for r in conta if r["kind"] == EXPENSE and r["amount_cents"] < 0
+              and (r["source_id"], r["amount_cents"]) in financiados]
+    linhas = sorted((f for f in fatura if f["kind"] == EXPENSE and _nome_pix_no_credito(f["description"])),
+                    key=lambda f: f["date"])
+    for f in linhas:
+        nome, d_f = _nome_pix_no_credito(f["description"]), date.fromisoformat(f["date"])
+        cands = [r for r in saidas if r["kind"] == EXPENSE and r.get("counterparty") == nome
+                 and 0 <= (d_f - date.fromisoformat(r["date"])).days <= JANELA_PIX_NO_CREDITO_DIAS]
+        # A linha da fatura só soma custo ao Pix: saída maior que ela não é a dela (salvo parcelado,
+        # em que cada linha é uma fração; aí vale só a proximidade de data).
+        compat = [r for r in cands if -r["amount_cents"] <= -f["amount_cents"]]
+        if cands:
+            max(compat or cands, key=lambda r: r["date"])["kind"] = CREDIT_FUNDING
 
 
 def mark_passthrough(rows: list[dict]) -> None:

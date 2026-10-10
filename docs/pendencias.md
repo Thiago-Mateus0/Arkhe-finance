@@ -33,7 +33,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P1 | Como o Nubank escreve compra parcelada na fatura? Falta um CSV de amostra (anonimizado) | Fase 4 (ADR 0012) | Aguardar uma fatura com parcelamento |
 | ~~P2~~ | ~~Orçamento: limite mensal fixo ou por mês? O que dispara o aviso?~~ | — | ✅ proposto no [ADR 0015](adr/0015-orcamento-por-categoria.md): fixo, aviso a 80% e ao estourar (aguarda revisão) |
 | P12 | Orçamento: limite diferente por mês (sazonalidade)? Aviso fora da tela (notificação)? | Fase 4 | Só se o uso mostrar necessidade |
-| P3 | Pix no crédito **para terceiro** aparece na fatura ("Pix no Crédito - NOME") **e** na conta (Pix de saída), e pode contar duas vezes. Para o próprio dono já está resolvido: é transferência (ADR 0017) | Fase 4 | Parear a linha da fatura com o Pix de saída da conta (mesmo valor, datas próximas) e contar uma vez só, com teste das leituras. Esperar o Thiago confirmar com um caso real dele |
+| P3 | ~~Pix no crédito contado duas vezes~~ — resolvido: para o dono é transferência (ADR 0017); para terceiro conta uma vez, pela fatura (ADR 0018) | — | Feito. Atenção: depende da fatura estar importada |
 | P4 | Categorias criadas pelo usuário não têm cor própria (só 8 têm). Como atribuir cor a categorias livres? | Fase 4 | Atribuir da paleta, por ordem de criação, e guardar |
 | P5 | Detectar assinaturas (cobrança que se repete todo mês) | Fase 4 | Só depois de ter 3+ meses importados |
 | P6 | ~~Tela para editar e apagar regras~~ — feita: *Regras de categoria*, dentro de Atividades | — | Feito |
