@@ -8,7 +8,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from . import db, service
+from . import db, parcelas, service
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -98,6 +98,11 @@ def add_own_name(name: str, conn=Depends(get_conn)):
     conn.commit()
     service.reclassify(conn)
     return {"nomes": sorted(service.get_own_names(conn))}
+
+
+@app.get("/reports/parcelas")
+def parcelas_futuras(conn=Depends(get_conn)):
+    return parcelas.projetar(conn)
 
 
 @app.get("/reports/monthly")

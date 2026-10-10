@@ -30,7 +30,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 
 | # | Pendência | Bloqueia | Recomendação |
 |---|---|---|---|
-| P1 | Como o Nubank escreve compra parcelada na fatura? Falta um CSV de amostra (anonimizado) | Fase 4 (ADR 0012) | Aguardar uma fatura com parcelamento |
+| P1 | ~~Como o Nubank escreve compra parcelada na fatura?~~ — respondido: uma linha por parcela, "TÍTULO - Parcela N/M" (no Pix no crédito, "- N/M") | — | Feito; implementado como "Parcelas a vir" (ADR 0012) |
 | ~~P2~~ | ~~Orçamento: limite mensal fixo ou por mês? O que dispara o aviso?~~ | — | ✅ proposto no [ADR 0015](adr/0015-orcamento-por-categoria.md): fixo, aviso a 80% e ao estourar (aguarda revisão) |
 | P12 | Orçamento: limite diferente por mês (sazonalidade)? Aviso fora da tela (notificação)? | Fase 4 | Só se o uso mostrar necessidade |
 | P3 | ~~Pix no crédito contado duas vezes~~ — resolvido: para o dono é transferência (ADR 0017); para terceiro conta uma vez, pela fatura (ADR 0018) | — | Feito. Atenção: depende da fatura estar importada |
