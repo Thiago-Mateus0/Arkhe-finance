@@ -27,9 +27,10 @@ def import_csv(conn: sqlite3.Connection, content: str | bytes) -> dict:
     fmt = detect_format(text)
     parsed = parse_nubank_conta(text) if fmt == "nubank_conta" else parse_nubank_fatura(text)
     rs = get_rules(conn)
+    own = get_own_names(conn)
     inserted = 0
     for p in parsed:
-        kind = (classifier.classify_fatura(p.description, p.amount_cents) if fmt == "nubank_fatura"
+        kind = (classifier.classify_fatura(p.description, p.amount_cents, own) if fmt == "nubank_fatura"
                 else EXPENSE)  # reclassify() define o tipo final das linhas de conta
         cur = conn.execute(
             "INSERT OR IGNORE INTO transactions (household_id, account, source_id, date, amount_cents,"
@@ -44,7 +45,8 @@ def import_csv(conn: sqlite3.Connection, content: str | bytes) -> dict:
 
 
 def reclassify(conn: sqlite3.Connection) -> None:
-    """Recalcula o tipo das linhas de conta (nomes próprios e passagem dependem do conjunto todo)."""
+    """Recalcula o tipo das linhas de conta (nomes próprios e passagem dependem do conjunto todo)
+    e das linhas de fatura que dependem de nome próprio (Pix no crédito)."""
     own = get_own_names(conn)
     rows = [dict(r) for r in conn.execute(
         "SELECT id, date, source_id, amount_cents, description, counterparty FROM transactions"
@@ -52,6 +54,12 @@ def reclassify(conn: sqlite3.Connection) -> None:
     for r in rows:
         r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own)
     classifier.mark_passthrough(rows)
+    faturas = [dict(r) for r in conn.execute(
+        "SELECT id, description, amount_cents FROM transactions WHERE household_id=? AND account='nubank_fatura'",
+        (HOUSEHOLD,))]
+    for r in faturas:
+        r["kind"] = classifier.classify_fatura(r["description"], r["amount_cents"], own)
+    rows += faturas
     conn.executemany("UPDATE transactions SET kind=? WHERE id=?", [(r["kind"], r["id"]) for r in rows])
     conn.commit()
 
