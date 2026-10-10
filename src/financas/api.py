@@ -37,6 +37,13 @@ class RuleIn(BaseModel):
     category: str
     priority: int = 0
 
+    def limpa(self) -> "RuleIn":
+        """Padrão vazio casaria com tudo; recusa antes de gravar."""
+        pattern, category = self.pattern.strip(), self.category.strip()
+        if not pattern or not category:
+            raise HTTPException(422, "Padrão e categoria são obrigatórios")
+        return RuleIn(pattern=pattern, category=category, priority=self.priority)
+
 
 @app.post("/import")
 async def import_csv(file: UploadFile, conn=Depends(get_conn)):
@@ -48,6 +55,7 @@ async def import_csv(file: UploadFile, conn=Depends(get_conn)):
 
 @app.post("/rules")
 def add_rule(rule: RuleIn, conn=Depends(get_conn)):
+    rule = rule.limpa()
     conn.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES (?,?,?,?)",
                  (service.HOUSEHOLD, rule.pattern, rule.category, rule.priority))
     conn.commit()
@@ -57,6 +65,17 @@ def add_rule(rule: RuleIn, conn=Depends(get_conn)):
 @app.post("/rules/seed")
 def seed_rules(conn=Depends(get_conn)):
     return service.seed_default_rules(conn)
+
+
+@app.put("/rules/{rule_id}")
+def edit_rule(rule_id: int, rule: RuleIn, conn=Depends(get_conn)):
+    rule = rule.limpa()
+    cur = conn.execute("UPDATE rules SET pattern=?, category=?, priority=? WHERE id=? AND household_id=?",
+                       (rule.pattern, rule.category, rule.priority, rule_id, service.HOUSEHOLD))
+    conn.commit()
+    if not cur.rowcount:
+        raise HTTPException(404, "Regra não encontrada")
+    return {"recategorizadas": service.recategorize(conn)}
 
 
 @app.delete("/rules/{rule_id}")

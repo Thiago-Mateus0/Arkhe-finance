@@ -21,3 +21,7 @@ Cada categoria conhecida tem uma cor fixa (a cor segue a categoria, nunca a posi
 ## Pontos de entrada
 
 `POST /rules` · `POST /rules/seed` · `DELETE /rules/{id}` · `GET /rules` · `PATCH /transactions/{id}` · `GET /categories`.
+
+## Gerenciar regras
+
+Toda regra pode ser **criada, editada (padrão, categoria, prioridade) e apagada**, na tela *Regras de categoria* (acessada em Atividades) ou pela API (`POST`, `PUT` e `DELETE /rules`). Depois de qualquer mudança, as transações **não travadas** são recategorizadas. Padrão ou categoria vazios são recusados, porque um padrão vazio casaria com tudo.

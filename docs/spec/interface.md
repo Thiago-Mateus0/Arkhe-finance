@@ -8,6 +8,7 @@ Mobile-first, sem build. Código em `src/financas/static/`. O "porquê" está no
 |---|---|
 | **Início** | Gastos do mês com gráfico acumulado; aviso de pendentes; três maiores categorias; cartão Orçamento (os três mais pressionados); transações recentes; saldo (receitas − gastos) e gasto no cartão |
 | **Atividades** | Busca; filtros Todas, Entradas, Saídas, Sem categoria, Cartão, Não contam; lançamentos agrupados por dia (Hoje, Ontem, dia da semana, data) |
+| **Regras de categoria** | Aberta por um botão em Atividades (não é aba). Lista de regras por categoria; tocar abre a folha para editar ou apagar; botão Nova regra |
 | **Gastos** | Gasto acumulado do mês contra o mês anterior (linha tracejada), com valor por dia ao tocar; rosca e lista de categorias; tabela de valores por dia |
 | **Orçamento** | Resumo do mês (orçado e gasto nas categorias), um item por categoria com barra, estado e quanto resta ou passou; botão para criar; tocar num item edita ou remove (ver `orcamento.md`) |
 | **Fluxo** | Receitas e gastos por dia (Geral, Entradas, Saídas) e saldo do mês |

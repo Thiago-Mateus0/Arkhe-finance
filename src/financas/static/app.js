@@ -278,6 +278,7 @@ async function viewActivity() {
   const groups = []; list.forEach((t) => { const g = groups[groups.length - 1]; (g && g.date === t.date ? g : groups[groups.push({ date: t.date, items: [] }) - 1]).items.push(t); });
   const chip = (k, label) => `<button class="chip" data-filter="${k}" aria-pressed="${!state.category && f === k}">${label}</button>`;
   return `<div class="hdr"><h1 class="title">Atividades</h1>${monthPill()}</div>
+  <button class="chip" data-go="rules" style="margin-bottom:10px">Regras de categoria</button>
   <label class="search">${ICON.search}<input id="q" type="search" placeholder="Buscar" value="${esc(state.q)}" aria-label="Buscar transações" autocomplete="off"></label>
   <div class="chips">${chip("all", "Todas")}${chip("in", "Entradas")}${chip("out", "Saídas")}${chip("uncat", "Sem categoria")}${chip("card", "Cartão")}${chip("hidden", "Não contam")}</div>
   ${state.category ? `<button class="chip" data-clearcat style="margin-bottom:6px" aria-pressed="true">${esc(state.category)} ✕</button>` : ""}
@@ -321,6 +322,37 @@ async function viewBudget() {
   <div style="margin-top:8px">${bud.itens.map((i) => budgetRow(i)).join("") || `<p class="empty">Nenhum orçamento ainda.<br>Escolha uma categoria e um limite mensal.</p>`}</div>
   <button class="btn" data-bud="" style="margin-top:18px">Novo orçamento</button>
   <p class="muted small" style="margin-top:14px">O limite vale todos os meses. Atenção a partir de 80%; estourou quando passa do limite. Só conta gasto: repasse, transferência e pagamento de fatura ficam de fora.</p>`;
+}
+
+let rulesCache = [];
+async function viewRules() {
+  rulesCache = await api("/rules");
+  const ord = [...rulesCache].sort((a, b) => a.category.localeCompare(b.category, "pt-BR") || a.pattern.localeCompare(b.pattern, "pt-BR"));
+  const row = (r) => `<button class="item bud" data-rule="${r.id}"><span class="ico sm" style="--cc:${catColor(r.category)}">${catIcon(r.category)}</span>
+    <span class="grow"><div class="row between"><span class="nm">${esc(r.pattern)}</span><span class="muted small">${r.priority ? `prioridade ${r.priority}` : ""}</span></div>
+    <div class="muted small">vira ${esc(r.category)}</div></span></button>`;
+  return `<div class="hdr"><button class="round" data-go="activity" aria-label="Voltar">${ICON.left}</button><div class="row">${hdrButtons()}</div></div>
+  <h1 class="title" style="margin-bottom:6px">Regras de categoria</h1>
+  <p class="t2 small" style="margin-bottom:14px">Se o nome do lançamento contém o texto, ele entra na categoria. Em caso de várias regras, vence a de maior prioridade; empatando, a mais específica. Categoria escolhida à mão em um lançamento nunca é alterada por regra.</p>
+  <button class="btn" data-rule="">Nova regra</button>
+  <div style="margin-top:12px">${ord.map(row).join("") || `<p class="empty">Nenhuma regra ainda.</p>`}</div>`;
+}
+async function openRuleSheet(id) {
+  const r = rulesCache.find((x) => x.id === id), novo = !r;
+  const cats = (await api("/categories")).filter((c) => c !== "Sem categoria");
+  $sheet.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Regra de categoria">
+    <div class="row between"><b style="font-size:1.2rem">${novo ? "Nova regra" : "Editar regra"}</b><button class="round" data-close aria-label="Fechar">✕</button></div>
+    <label class="muted small" for="rpat" style="display:block;margin-top:14px">Quando o nome contém</label>
+    <input id="rpat" type="text" value="${esc(r?.pattern)}" placeholder="Ex.: ifood" autocomplete="off">
+    <label class="muted small" for="rcat" style="display:block;margin-top:6px">Categoria</label>
+    <input id="rcat" type="text" list="rlist" value="${esc(r?.category)}" placeholder="Ex.: Delivery" autocomplete="off">
+    <datalist id="rlist">${cats.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>
+    <label class="muted small" for="rpri" style="display:block;margin-top:6px">Prioridade (maior vence; padrão 0)</label>
+    <input id="rpri" type="number" inputmode="numeric" step="1" value="${r ? r.priority : 0}">
+    <p id="rerr" class="neg small" role="alert" style="min-height:1.2em"></p>
+    <button class="btn" data-rulesave="${novo ? "" : r.id}">Salvar</button>
+    ${novo ? "" : `<button class="chip" data-ruledel="${r.id}" style="width:100%;margin-top:10px;color:var(--neg)">Apagar regra</button>`}</div>`;
+  $sheet.hidden = false; document.getElementById("rpat").focus();
 }
 
 function viewImport() {
@@ -367,7 +399,7 @@ async function openBudgetSheet(categoria, limite) {
 const closeSheet = () => { $sheet.hidden = true; $sheet.innerHTML = ""; };
 
 /* ---------- navegação e render ---------- */
-const VIEWS = { home: viewHome, spend: viewSpend, activity: viewActivity, budget: viewBudget, flow: viewFlow, import: viewImport };
+const VIEWS = { home: viewHome, spend: viewSpend, activity: viewActivity, budget: viewBudget, flow: viewFlow, import: viewImport, rules: viewRules };
 function renderNav() {
   const t = (v, ic, label) => `<button class="tab" data-go="${v}" ${state.view === v ? 'aria-current="page"' : ""}>${ICON[ic]}<span>${label}</span></button>`;
   $nav.innerHTML = `<div class="brand">${LOGO}<span>Arkhe Finance</span></div><div class="tabs">${t("home", "home", "Início")}${t("activity", "list", "Atividades")}${t("spend", "pie", "Gastos")}${t("budget", "target", "Orçamento")}${t("flow", "flow", "Fluxo")}${t("import", "upload", "Importar")}</div>`;
@@ -412,7 +444,7 @@ async function upload(files) {
 
 let searchTimer;
 document.addEventListener("click", async (ev) => {
-  const el = ev.target.closest("[data-go],[data-act],[data-tx],[data-filter],[data-flow],[data-close],[data-pick],[data-save],[data-clearcat],[data-bud],[data-budsave],[data-buddel]");
+  const el = ev.target.closest("[data-go],[data-act],[data-tx],[data-filter],[data-flow],[data-close],[data-pick],[data-save],[data-clearcat],[data-bud],[data-budsave],[data-buddel],[data-rule],[data-rulesave],[data-ruledel]");
   if (!el) { if (ev.target === $sheet) closeSheet(); return; }
   const d = el.dataset;
   if (d.close !== undefined) return closeSheet();
@@ -428,6 +460,24 @@ document.addEventListener("click", async (ev) => {
   if (d.buddel !== undefined) {
     if (!confirm(`Remover o orçamento de ${d.buddel}? Os lançamentos continuam.`)) return;
     try { await api(`/budgets/${encodeURIComponent(d.buddel)}`, { method: "DELETE" }); invalidate(); closeSheet(); render(); } catch (e) { alert(e.message); }
+    return;
+  }
+  if (d.rule !== undefined) return openRuleSheet(d.rule ? Number(d.rule) : null);
+  if (d.rulesave !== undefined) {
+    const pattern = document.getElementById("rpat").value.trim(), category = document.getElementById("rcat").value.trim();
+    const priority = Number.parseInt(document.getElementById("rpri").value, 10), err = document.getElementById("rerr");
+    if (!pattern) { err.textContent = "Escreva o texto que a regra procura."; return; }
+    if (!category) { err.textContent = "Escolha uma categoria."; return; }
+    if (Number.isNaN(priority)) { err.textContent = "Prioridade precisa ser um número inteiro."; return; }
+    try {
+      await api(d.rulesave ? `/rules/${d.rulesave}` : "/rules", { method: d.rulesave ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pattern, category, priority }) });
+      invalidate(); closeSheet(); render();
+    } catch (e) { err.textContent = e.message; }
+    return;
+  }
+  if (d.ruledel !== undefined) {
+    if (!confirm("Apagar esta regra? Os lançamentos voltam a ser categorizados pelas outras regras; os que você categorizou à mão não mudam.")) return;
+    try { await api(`/rules/${d.ruledel}`, { method: "DELETE" }); invalidate(); closeSheet(); render(); } catch (e) { alert(e.message); }
     return;
   }
   if (d.pick !== undefined) { document.getElementById("cat").value = d.pick; return; }

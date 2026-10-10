@@ -33,10 +33,10 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P1 | Como o Nubank escreve compra parcelada na fatura? Falta um CSV de amostra (anonimizado) | Fase 4 (ADR 0012) | Aguardar uma fatura com parcelamento |
 | ~~P2~~ | ~~Orçamento: limite mensal fixo ou por mês? O que dispara o aviso?~~ | — | ✅ proposto no [ADR 0015](adr/0015-orcamento-por-categoria.md): fixo, aviso a 80% e ao estourar (aguarda revisão) |
 | P12 | Orçamento: limite diferente por mês (sazonalidade)? Aviso fora da tela (notificação)? | Fase 4 | Só se o uso mostrar necessidade |
-| P3 | Pix no crédito aparece na conta (Pix de saída) **e** pode aparecer na fatura. Contar uma vez só exige parear os dois | Fase 3 | Esperar um caso real nos dados antes de construir o pareamento |
+| P3 | Pix no crédito aparece na conta (Pix de saída) **e** pode aparecer na fatura. Contar uma vez só exige parear os dois. **Caso real:** o dono tem Pix no crédito para si mesmo (nome dele na contraparte, com prefixo "PIX NO CRÉDITO -"); hoje cai como gasto, e o prefixo impede o casamento exato com os nomes próprios | Fase 3 | Tratar Pix no crédito para nome próprio como transferência, não gasto, **com teste das duas leituras** (fatura e conta). Decisão de regra de dinheiro: PR e espera o dono |
 | P4 | Categorias criadas pelo usuário não têm cor própria (só 8 têm). Como atribuir cor a categorias livres? | Fase 4 | Atribuir da paleta, por ordem de criação, e guardar |
 | P5 | Detectar assinaturas (cobrança que se repete todo mês) | Fase 4 | Só depois de ter 3+ meses importados |
-| P6 | Tela para editar e apagar regras (hoje só pela API) | Fase 4 | Lista simples dentro de Atividades |
+| P6 | ~~Tela para editar e apagar regras~~ — feita: *Regras de categoria*, dentro de Atividades | — | Feito |
 | P7 | Saldo das contas: lembrete mensal para o dono informar? | Fase 5 | Aviso na tela Início, no dia 1 |
 | P8 | Open Finance: qual agregador e qual o custo real? | Fase 6 | Pesquisar só quando chegar a fase 6 |
 | P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Hospedagem simples com login; **a API atual não pode ser exposta** (ADR 0008) |
