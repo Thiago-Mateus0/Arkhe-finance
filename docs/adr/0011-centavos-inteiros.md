@@ -1,6 +1,6 @@
 # ADR 0011 — Dinheiro em centavos inteiros
 
-- **Status:** Proposto — aguarda revisão do Thiago
+- **Status:** Aceito
 - **Data:** 2026-10-06
 - **Fase:** 1 — Fundação
 - **Decidido por:** Claude, por delegação do Thiago ("tome as melhores decisões"); **aguarda revisão do Thiago**

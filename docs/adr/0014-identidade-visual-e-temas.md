@@ -1,6 +1,6 @@
 # ADR 0014 — Identidade visual própria, tema claro opcional e layout de computador
 
-- **Status:** Proposto — aguarda revisão do Thiago
+- **Status:** Aceito
 - **Data:** 2026-10-09
 - **Fase:** 2 — Design
 - **Decidido por:** Thiago pediu (identidade própria, tema claro opcional, computador); a cor, a marca e a navegação foram escolhidas por Claude e **aguardam revisão do Thiago**
