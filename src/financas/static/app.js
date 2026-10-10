@@ -1,5 +1,5 @@
 "use strict";
-/* Finanças — front em JS puro. Tudo que vem do CSV passa por esc() antes de entrar no HTML. */
+/* Arkhe Finance — front em JS puro. Tudo que vem do CSV passa por esc() antes de entrar no HTML. */
 
 const $app = document.getElementById("app");
 const $nav = document.getElementById("nav");
@@ -217,7 +217,7 @@ async function viewHome() {
   const cats = catRows(rep), pend = cats.find((c) => c.nome === "Sem categoria");
   const top = cats.slice(0, 3), rest = cats.length - top.length;
   const saldo = rep.receitas_total - rep.gastos_total;
-  return `<div class="brand brand-m">${LOGO}<span>Finanças</span></div>
+  return `<div class="brand brand-m">${LOGO}<span>Arkhe Finance</span></div>
   <div class="hdr">${monthPill()}${hdrButtons()}</div>
   <h1 class="greet">${greeting()} 👋</h1>
   <div class="stack">
@@ -370,7 +370,7 @@ const closeSheet = () => { $sheet.hidden = true; $sheet.innerHTML = ""; };
 const VIEWS = { home: viewHome, spend: viewSpend, activity: viewActivity, budget: viewBudget, flow: viewFlow, import: viewImport };
 function renderNav() {
   const t = (v, ic, label) => `<button class="tab" data-go="${v}" ${state.view === v ? 'aria-current="page"' : ""}>${ICON[ic]}<span>${label}</span></button>`;
-  $nav.innerHTML = `<div class="brand">${LOGO}<span>Finanças</span></div><div class="tabs">${t("home", "home", "Início")}${t("activity", "list", "Atividades")}${t("spend", "pie", "Gastos")}${t("budget", "target", "Orçamento")}${t("flow", "flow", "Fluxo")}${t("import", "upload", "Importar")}</div>`;
+  $nav.innerHTML = `<div class="brand">${LOGO}<span>Arkhe Finance</span></div><div class="tabs">${t("home", "home", "Início")}${t("activity", "list", "Atividades")}${t("spend", "pie", "Gastos")}${t("budget", "target", "Orçamento")}${t("flow", "flow", "Fluxo")}${t("import", "upload", "Importar")}</div>`;
 }
 async function render() {
   renderNav();

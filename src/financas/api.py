@@ -21,7 +21,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="Finanças", lifespan=lifespan)
+app = FastAPI(title="Arkhe Finance", lifespan=lifespan)
 
 
 def get_conn():
