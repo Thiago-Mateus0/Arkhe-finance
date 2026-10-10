@@ -78,3 +78,15 @@ def test_nao_altera_o_total_de_gastos(conn):
     parcelas.projetar(conn)
     depois = conn.execute("SELECT SUM(amount_cents) FROM transactions WHERE kind='expense'").fetchone()[0]
     assert antes == depois == -3000
+
+
+@pytest.mark.parametrize("marca", ["1/999999999", "1/61", "0/3", "5/3", "1/1"])
+def test_parcelamento_implausivel_e_ignorado(conn, marca):
+    """O CSV não é confiável: total absurdo não pode travar nem inflar a projeção."""
+    service.import_csv(conn, fatura(("2026-09-10", f"Loja Exemplo - Parcela {marca}", "30,00")))
+    assert meses(conn) == {}
+
+
+def test_limite_de_parcelas_aceita_o_maximo(conn):
+    service.import_csv(conn, fatura(("2026-09-10", f"Loja Exemplo - Parcela 1/{parcelas.MAX_PARCELAS}", "30,00")))
+    assert len(meses(conn)) == parcelas.MAX_PARCELAS - 1

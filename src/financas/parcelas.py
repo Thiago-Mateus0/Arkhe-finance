@@ -10,7 +10,8 @@ from datetime import date
 
 from .service import HOUSEHOLD
 
-_PARCELA = re.compile(r"^(?P<titulo>.+?)\s-\s(?:Parcela\s+)?(?P<n>\d+)/(?P<m>\d+)\s*$", re.IGNORECASE)
+MAX_PARCELAS = 60  # parcelamento de cartão não passa disso; o texto do CSV é não confiável
+_PARCELA = re.compile(r"^(?P<titulo>.+?)\s-\s(?:Parcela\s+)?(?P<n>\d{1,3})/(?P<m>\d{1,3})\s*$", re.IGNORECASE)
 
 
 def _mes_depois(d: date, k: int) -> str:
@@ -32,7 +33,7 @@ def projetar(conn: sqlite3.Connection) -> dict:
         if not m or r["amount_cents"] >= 0:
             continue
         n, total = int(m["n"]), int(m["m"])
-        if 1 <= n < total:
+        if 1 <= n < total <= MAX_PARCELAS:
             grupos[(m["titulo"].upper(), total, r["amount_cents"])].append((n, r["date"], m["titulo"]))
 
     por_mes: dict[str, list] = defaultdict(list)
