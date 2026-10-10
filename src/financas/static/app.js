@@ -18,7 +18,7 @@ const store = {
 };
 const now = new Date();
 const ymNow = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
-const state = { view: "home", month: ymNow, hidden: store.get("hidden", false), filter: "all", q: "", category: null, flow: "geral", cache: {} };
+const state = { view: "home", month: ymNow, hidden: store.get("hidden", false), filter: "all", q: "", category: null, flow: "geral", cache: {}, months: [] };
 document.body.classList.toggle("hide", state.hidden);
 state.theme = store.get("theme", "dark") === "light" ? "light" : "dark";  // escuro é o padrão; claro é opcional
 const applyTheme = () => {
@@ -54,6 +54,7 @@ const ICON = {
   eyeOff: I('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M4 4l16 16"/>'),
   left: I('<path d="M15 6l-6 6 6 6"/>'),
   right: I('<path d="M9 6l6 6-6 6"/>'),
+  target: I('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>'),
   sun: I('<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'),
   moon: I('<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/>'),
   upload: I('<path d="M12 16V4M12 4l-4 4M12 4l4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/>'),
@@ -85,15 +86,36 @@ async function api(url, opts) {
 const qs = (o) => new URLSearchParams(Object.entries(o).filter(([, v]) => v !== null && v !== undefined && v !== "")).toString();
 async function monthData(month) {
   if (!state.cache[month]) {
-    const [rep, daily, tx] = await Promise.all([
+    const [rep, daily, tx, bud] = await Promise.all([
       api(`/reports/monthly?${qs({ month })}`), api(`/reports/daily?${qs({ month })}`),
       api(`/transactions?${qs({ month, kinds: "income,expense", desc: true })}`),
+      api(`/budgets?${qs({ month })}`),
     ]);
-    state.cache[month] = { rep, daily, tx };
+    state.cache[month] = { rep, daily, tx, bud };
   }
   return state.cache[month];
 }
 const invalidate = () => { state.cache = {}; };
+
+/* "150", "150,5", "1.500,00", "R$ 99,90" -> número com até 2 casas; inválido -> null */
+function parseBRL(texto) {
+  if (/-/.test(String(texto))) return null;  // limite negativo nunca vira positivo por engano
+  let t = String(texto).replace(/[^\d,.]/g, "");
+  if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");  // 1.500 = mil e quinhentos
+  if (/\.\d{3,}$/.test(t)) return null;  // mais de 2 casas: recusa em vez de arredondar em silêncio
+  const v = Number(t);
+  return Number.isFinite(v) && v > 0 ? Math.round(v * 100) / 100 : null;
+}
+const ESTADO = {
+  ok: { rotulo: "Dentro do limite", icone: "✓" },
+  atencao: { rotulo: "Atenção", icone: "⚠" },
+  estourou: { rotulo: "Estourou", icone: "⛔" },
+};
+const meter = (i) => `<div class="meter ${i.estado}" role="img" aria-label="${pct(i.percentual)} do limite"><i style="width:${Math.min(100, i.percentual)}%"></i></div>`;
+const budgetRow = (i, extra = "") => `<button class="item bud" data-bud="${esc(i.categoria)}" data-limite="${i.limite}"><span class="ico sm" style="--cc:${catColor(i.categoria)}">${catIcon(i.categoria)}</span>
+  <span class="grow"><div class="row between"><span class="nm">${esc(i.categoria)}</span><span class="small st-${i.estado}">${ESTADO[i.estado].icone} ${ESTADO[i.estado].rotulo}</span></div>
+  ${meter(i)}<div class="muted small bud-l">${money(i.gasto)} de ${money(i.limite)}${i.restante < 0 ? ` · passou ${money(-i.restante)}` : ` · restam ${money(i.restante)}`}</div></span></button>`;
 
 /* ---------- gráficos ---------- */
 const cumulative = (arr, n) => { let s = 0; return Array.from({ length: n }, (_, i) => (s += arr[i] || 0)); };
@@ -189,7 +211,7 @@ function catRows(rep) {
 
 /* ---------- telas ---------- */
 async function viewHome() {
-  const { rep, daily, tx } = await monthData(state.month);
+  const { rep, daily, tx, bud } = await monthData(state.month);
   const n = daily.anterior.length, upto = state.month === ymNow ? Math.min(now.getDate(), n) : n;
   const cur = cumulative(daily.dias.map((d) => d.gastos), n), prev = cumulative(daily.anterior.map((d) => d.gastos), n);
   const cats = catRows(rep), pend = cats.find((c) => c.nome === "Sem categoria");
@@ -207,8 +229,11 @@ async function viewHome() {
       <div class="seg" role="img" aria-label="Distribuição dos gastos">${top.map((c) => `<i style="flex:${c.valor};--cc:${c.cor}"></i>`).join("") || `<i style="flex:1;--cc:var(--card-2)"></i>`}</div>
       ${top.map((c) => `<button class="item" data-go="activity" data-cat="${esc(c.nome)}"><span class="ico sm" style="--cc:${c.cor}">${catIcon(c.nome)}</span><span class="grow"><div class="nm">${esc(c.nome)}</div><div class="muted small">${pct(c.pct)}</div></span><span class="amt">${money(c.valor)}</span></button>`).join("") || `<p class="empty">Sem gastos neste mês.</p>`}
       ${rest > 0 ? `<button class="item" data-go="spend" style="justify-content:center"><span class="muted">Ver mais ${rest} ${rest === 1 ? "categoria" : "categorias"}</span></button>` : ""}</div>
+    <button class="card" data-go="budget"><div class="lbl"><span>Orçamento</span>${ICON.right}</div>
+      ${bud.itens.length ? bud.itens.slice(0, 3).map((i) => `<div class="bud-mini"><div class="row between"><span class="nm">${catIcon(i.categoria)} ${esc(i.categoria)}</span><span class="small st-${i.estado}">${ESTADO[i.estado].icone} ${pct(i.percentual)}</span></div>${meter(i)}</div>`).join("")
+        : `<p class="t2" style="margin-top:8px">Defina um limite por categoria e acompanhe quanto ainda pode gastar.</p><p class="small" style="margin-top:6px;color:var(--accent)">Criar orçamento</p>`}</button>
     <div class="card"><button class="lbl" data-go="activity" style="width:100%"><span>Transações recentes</span>${ICON.right}</button>
-      ${tx.slice(0, 5).map(txRow).join("") || `<p class="empty">Nada importado ainda. Toque em + para começar.</p>`}</div>
+      ${tx.slice(0, 5).map(txRow).join("") || `<p class="empty">${state.months.length ? "Sem lançamentos neste mês. Volte para outro mês ou use a aba Importar." : "Nada importado ainda. Use a aba Importar para começar."}</p>`}</div>
     <div class="grid2">
       <button class="card" data-go="flow"><div class="lbl"><span>Fluxo</span>${ICON.right}</div><div class="mid" style="margin-top:8px"><span class="${saldo >= 0 ? "pos" : "neg"}">${money(saldo)}</span></div>
         <div class="muted small" style="margin-top:6px">Receitas − gastos</div></button>
@@ -286,6 +311,18 @@ async function viewFlow() {
   <h2 style="margin:24px 0 0;font-size:1.1rem">Últimos lançamentos</h2>${tx.slice(0, 6).map(txRow).join("") || `<p class="empty">Sem lançamentos.</p>`}`;
 }
 
+async function viewBudget() {
+  const { bud } = await monthData(state.month);
+  const por = { estourou: 0, atencao: 0, ok: 0 }; bud.itens.forEach((i) => { por[i.estado] += 1; });
+  const resumo = bud.itens.length ? `${por.estourou ? `${por.estourou} estourou` : ""}${por.estourou && por.atencao ? " · " : ""}${por.atencao ? `${por.atencao} em atenção` : ""}${!por.estourou && !por.atencao ? "Tudo dentro do limite" : ""}` : "";
+  return `<div class="hdr"><h1 class="title">Orçamento</h1>${monthPill()}</div>
+  ${bud.itens.length ? `<div class="card"><div class="lbl"><span>Orçado no mês</span></div><div class="big">${money(bud.orcado_total)}</div>
+    <p class="t2">Gasto nessas categorias: ${money(bud.gasto_nas_categorias)}</p><p class="small" style="margin-top:6px">${resumo}</p></div>` : ""}
+  <div style="margin-top:8px">${bud.itens.map((i) => budgetRow(i)).join("") || `<p class="empty">Nenhum orçamento ainda.<br>Escolha uma categoria e um limite mensal.</p>`}</div>
+  <button class="btn" data-bud="" style="margin-top:18px">Novo orçamento</button>
+  <p class="muted small" style="margin-top:14px">O limite vale todos os meses. Atenção a partir de 80%; estourou quando passa do limite. Só conta gasto: repasse, transferência e pagamento de fatura ficam de fora.</p>`;
+}
+
 function viewImport() {
   return `${backHdr()}<h1 class="title" style="margin-bottom:6px">Importar</h1>
   <p class="t2" style="margin-bottom:18px">CSV da conta ou da fatura do Nubank. O app reconhece o tipo e ignora o que já foi importado.</p>
@@ -312,13 +349,28 @@ async function openSheet(id) {
     <button class="btn" data-save="${t.id}">Salvar</button></div>`;
   $sheet.hidden = false; document.getElementById("cat").focus();
 }
+async function openBudgetSheet(categoria, limite) {
+  const cats = (await api("/categories")).filter((c) => c !== "Sem categoria");
+  const novo = !categoria;
+  $sheet.innerHTML = `<div class="sheet" role="dialog" aria-modal="true" aria-label="Orçamento">
+    <div class="row between"><b style="font-size:1.2rem">${novo ? "Novo orçamento" : "Editar orçamento"}</b><button class="round" data-close aria-label="Fechar">✕</button></div>
+    <label class="muted small" for="bcat" style="display:block;margin-top:14px">Categoria</label>
+    <input id="bcat" type="text" list="blist" value="${esc(categoria)}" placeholder="Ex.: Delivery" autocomplete="off" ${novo ? "" : "readonly"}>
+    <datalist id="blist">${cats.map((c) => `<option value="${esc(c)}">`).join("")}</datalist>
+    <label class="muted small" for="blim" style="display:block;margin-top:6px">Limite por mês (R$)</label>
+    <input id="blim" type="text" inputmode="decimal" value="${limite ? String(limite).replace(".", ",") : ""}" placeholder="Ex.: 150,00" autocomplete="off">
+    <p id="berr" class="neg small" role="alert" style="min-height:1.2em"></p>
+    <button class="btn" data-budsave>Salvar</button>
+    ${novo ? "" : `<button class="chip" data-buddel="${esc(categoria)}" style="width:100%;margin-top:10px;color:var(--neg)">Remover orçamento</button>`}</div>`;
+  $sheet.hidden = false; document.getElementById(novo ? "bcat" : "blim").focus();
+}
 const closeSheet = () => { $sheet.hidden = true; $sheet.innerHTML = ""; };
 
 /* ---------- navegação e render ---------- */
-const VIEWS = { home: viewHome, spend: viewSpend, activity: viewActivity, flow: viewFlow, import: viewImport };
+const VIEWS = { home: viewHome, spend: viewSpend, activity: viewActivity, budget: viewBudget, flow: viewFlow, import: viewImport };
 function renderNav() {
   const t = (v, ic, label) => `<button class="tab" data-go="${v}" ${state.view === v ? 'aria-current="page"' : ""}>${ICON[ic]}<span>${label}</span></button>`;
-  $nav.innerHTML = `<div class="brand">${LOGO}<span>Finanças</span></div><div class="tabs">${t("home", "home", "Início")}${t("activity", "list", "Atividades")}${t("spend", "pie", "Gastos")}${t("flow", "flow", "Fluxo")}${t("import", "upload", "Importar")}</div>`;
+  $nav.innerHTML = `<div class="brand">${LOGO}<span>Finanças</span></div><div class="tabs">${t("home", "home", "Início")}${t("activity", "list", "Atividades")}${t("spend", "pie", "Gastos")}${t("budget", "target", "Orçamento")}${t("flow", "flow", "Fluxo")}${t("import", "upload", "Importar")}</div>`;
 }
 async function render() {
   renderNav();
@@ -354,15 +406,30 @@ async function upload(files) {
     }
   }
   invalidate();
+  try { state.months = await api("/months"); } catch { /* segue com a lista antiga */ }
   res.insertAdjacentHTML("beforeend", `<button class="btn" data-go="home">Ver resumo</button>`);
 }
 
 let searchTimer;
 document.addEventListener("click", async (ev) => {
-  const el = ev.target.closest("[data-go],[data-act],[data-tx],[data-filter],[data-flow],[data-close],[data-pick],[data-save],[data-clearcat]");
+  const el = ev.target.closest("[data-go],[data-act],[data-tx],[data-filter],[data-flow],[data-close],[data-pick],[data-save],[data-clearcat],[data-bud],[data-budsave],[data-buddel]");
   if (!el) { if (ev.target === $sheet) closeSheet(); return; }
   const d = el.dataset;
   if (d.close !== undefined) return closeSheet();
+  if (d.bud !== undefined) return openBudgetSheet(d.bud, d.limite ? Number(d.limite) : null);
+  if (d.budsave !== undefined) {
+    const cat = document.getElementById("bcat").value.trim(), lim = parseBRL(document.getElementById("blim").value), err = document.getElementById("berr");
+    if (!cat) { err.textContent = "Escolha uma categoria."; return; }
+    if (lim === null) { err.textContent = "Informe um limite maior que zero, como 150 ou 150,50."; return; }
+    try { await api(`/budgets/${encodeURIComponent(cat)}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ limite: lim }) }); invalidate(); closeSheet(); render(); }
+    catch (e) { err.textContent = e.message; }
+    return;
+  }
+  if (d.buddel !== undefined) {
+    if (!confirm(`Remover o orçamento de ${d.buddel}? Os lançamentos continuam.`)) return;
+    try { await api(`/budgets/${encodeURIComponent(d.buddel)}`, { method: "DELETE" }); invalidate(); closeSheet(); render(); } catch (e) { alert(e.message); }
+    return;
+  }
   if (d.pick !== undefined) { document.getElementById("cat").value = d.pick; return; }
   if (d.save !== undefined) {
     const category = document.getElementById("cat").value.trim();
@@ -392,4 +459,10 @@ document.addEventListener("dragover", (ev) => { if (document.getElementById("dro
 document.addEventListener("drop", (ev) => { if (document.getElementById("drop")) { ev.preventDefault(); upload([...ev.dataTransfer.files]); } });
 document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") closeSheet(); });
 
-render();
+(async () => {
+  try {
+    state.months = await api("/months");
+    if (state.months.length && !state.months.includes(state.month)) state.month = state.months[0];  // abre no último mês com dados
+  } catch { state.months = []; }
+  render();
+})();
