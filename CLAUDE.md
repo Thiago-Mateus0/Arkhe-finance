@@ -58,7 +58,8 @@ pip install -e ".[dev]"
 python -m pytest -q                         # toda a suíte
 ./run.sh                                    # app em http://localhost:8000
 ./run.sh import extrato.csv fatura.csv      # importa sem abrir a tela
-./run.sh demo                               # app com dados fictícios (demo.db)
+./run.sh demo                               # app com dados fictícios e orçamentos de exemplo (demo.db)
+python -m financas orcamento "Delivery" 150,50   # limite mensal de uma categoria
 python scripts/gerar_demo.py                # regenera data/demo/ (determinístico)
 node --check src/financas/static/app.js     # sintaxe do front
 ```

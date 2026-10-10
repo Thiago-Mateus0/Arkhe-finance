@@ -29,6 +29,12 @@ CREATE TABLE IF NOT EXISTS rules (
     category TEXT NOT NULL,
     priority INTEGER NOT NULL DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS budgets (
+    household_id TEXT NOT NULL DEFAULT 'default',
+    category TEXT NOT NULL,
+    limit_cents INTEGER NOT NULL CHECK (limit_cents > 0),
+    PRIMARY KEY (household_id, category)
+);
 CREATE TABLE IF NOT EXISTS meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
