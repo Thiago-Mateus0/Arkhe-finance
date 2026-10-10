@@ -7,6 +7,7 @@ Mobile-first, sem build. Código em `src/financas/static/`. O "porquê" está no
 | Tela | O que mostra |
 |---|---|
 | **Início** | Gastos do mês com gráfico acumulado; aviso de pendentes; três maiores categorias; cartão Orçamento (os três mais pressionados); transações recentes; saldo (receitas − gastos) e gasto no cartão |
+| **Início**, card *Parcelas a vir* | Aparece só se há parcelas restantes: até 3 meses, com total e quantidade de parcelas. É leitura da fatura, não entra nos gastos |
 | **Atividades** | Busca; filtros Todas, Entradas, Saídas, Sem categoria, Cartão, Não contam; lançamentos agrupados por dia (Hoje, Ontem, dia da semana, data) |
 | **Regras de categoria** | Aberta por um botão em Atividades (não é aba). Lista de regras por categoria; tocar abre a folha para editar ou apagar; botão Nova regra |
 | **Gastos** | Gasto acumulado do mês contra o mês anterior (linha tracejada), com valor por dia ao tocar; rosca e lista de categorias; tabela de valores por dia |

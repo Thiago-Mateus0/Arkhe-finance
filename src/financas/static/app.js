@@ -217,6 +217,7 @@ async function viewHome() {
   const cats = catRows(rep), pend = cats.find((c) => c.nome === "Sem categoria");
   const top = cats.slice(0, 3), rest = cats.length - top.length;
   const saldo = rep.receitas_total - rep.gastos_total;
+  const parc = await api("/reports/parcelas").catch(() => ({ meses: [] }));
   return `<div class="brand brand-m">${LOGO}<span>Arkhe Finance</span></div>
   <div class="hdr">${monthPill()}${hdrButtons()}</div>
   <h1 class="greet">${greeting()} 👋</h1>
@@ -232,6 +233,9 @@ async function viewHome() {
     <button class="card" data-go="budget"><div class="lbl"><span>Orçamento</span>${ICON.right}</div>
       ${bud.itens.length ? bud.itens.slice(0, 3).map((i) => `<div class="bud-mini"><div class="row between"><span class="nm">${catIcon(i.categoria)} ${esc(i.categoria)}</span><span class="small st-${i.estado}">${ESTADO[i.estado].icone} ${pct(i.percentual)}</span></div>${meter(i)}</div>`).join("")
         : `<p class="t2" style="margin-top:8px">Defina um limite por categoria e acompanhe quanto ainda pode gastar.</p><p class="small" style="margin-top:6px;color:var(--accent)">Criar orçamento</p>`}</button>
+    ${parc.meses.length ? `<div class="card"><div class="lbl"><span>Parcelas a vir</span></div>
+      ${parc.meses.slice(0, 3).map((m) => `<div class="item"><span class="grow"><div class="nm">${esc(ymLabel(m.mes))}</div><div class="muted small">${m.itens.length} ${m.itens.length === 1 ? "parcela" : "parcelas"}</div></span><span class="amt">${money(m.total)}</span></div>`).join("")}
+      <p class="muted small" style="margin-top:6px">Já comprometido no cartão, a partir das parcelas da fatura.</p></div>` : ""}
     <div class="card"><button class="lbl" data-go="activity" style="width:100%"><span>Transações recentes</span>${ICON.right}</button>
       ${tx.slice(0, 5).map(txRow).join("") || `<p class="empty">${state.months.length ? "Sem lançamentos neste mês. Volte para outro mês ou use a aba Importar." : "Nada importado ainda. Use a aba Importar para começar."}</p>`}</div>
     <div class="grid2">

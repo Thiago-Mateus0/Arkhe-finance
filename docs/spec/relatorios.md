@@ -26,3 +26,7 @@ Lista `aaaa-mm` dos meses que têm algum lançamento, do mais recente para o mai
 ## Comparação com o mês anterior
 
 A tela compara o gasto acumulado até o **mesmo dia** do mês anterior, não o total do mês anterior inteiro; num mês fechado, os dois coincidem.
+
+## Parcelas a vir
+
+`GET /reports/parcelas`: parcelas que ainda vão chegar, por mês, projetadas a partir da fatura (ADR 0012). Cada linha da fatura com "- Parcela N/M" (ou "- N/M", no Pix no crédito) é **uma** parcela de valor fixo. Para cada compra (título, M e valor iguais) vale a parcela mais recente já vista; projetam-se as M − N seguintes, um mês depois da outra, **só para meses depois do último mês importado**. É leitura: não muda tipo nem os totais de gasto. Valores em centavos por dentro, reais na resposta.
