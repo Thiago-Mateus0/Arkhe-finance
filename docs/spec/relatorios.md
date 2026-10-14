@@ -30,3 +30,12 @@ A tela compara o gasto acumulado até o **mesmo dia** do mês anterior, não o t
 ## Parcelas a vir
 
 `GET /reports/parcelas`: parcelas que ainda vão chegar, por mês, projetadas a partir da fatura (ADR 0012). Cada linha da fatura com "- Parcela N/M" (ou "- N/M", no Pix no crédito) é **uma** parcela de valor fixo. Para cada compra (título, M e valor iguais) vale a parcela mais recente já vista; projetam-se as M − N seguintes, um mês depois da outra, **só para meses depois do último mês importado**. É leitura: não muda tipo nem os totais de gasto. Valores em centavos por dentro, reais na resposta.
+
+## Assinaturas
+
+`GET /reports/assinaturas?month=AAAA-MM`: leitura da categoria **Assinaturas** (conta e fatura). Quem diz o que é assinatura é o usuário, por regra; o app não detecta sozinho (ADR 0019). Resposta:
+
+- `total`: soma do mês, só `gasto` da categoria; estorno reduz.
+- `itens`: uma por nome, **ativas** (cobrança no mês pedido ou nos 2 anteriores), com a cobrança mais recente (data e valor), quantos meses distintos já cobrou e `proxima` (última data + 1 mês) **só com 2 meses ou mais**.
+
+É leitura: não muda tipo nem os totais de gasto.
