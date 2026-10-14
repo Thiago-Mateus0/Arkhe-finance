@@ -38,9 +38,10 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P5 | ~~Detectar assinaturas~~ — decidido: assinatura é a categoria "Assinaturas", marcada por regra (ADR 0019); sem detecção automática | — | Feito. Sugestão automática (3+ meses, valor parecido) fica como ideia futura, só se o uso pedir |
 | P6 | ~~Tela para editar e apagar regras~~ — feita: *Regras de categoria*, dentro de Atividades | — | Feito |
 | P7 | Saldo das contas: lembrete mensal para o dono informar? | Fase 5 | Aviso na tela Início, no dia 1 |
-| P8 | Open Finance: qual agregador e qual o custo real? | Fase 6 | Pesquisar só quando chegar a fase 6 |
+| P8 | ~~Open Finance: qual agregador e custo?~~ — decidido: **Meu Pluggy** (gratuito para uso pessoal), como importador novo (ADR 0020) | — | Feito; implementação é a fase 6 |
 | P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Hospedagem simples com login; **a API atual não pode ser exposta** (ADR 0008) |
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
+| P14 | Meu Pluggy: com que frequência a conta do dono atualiza o Nubank (relatos dizem cerca de uma vez por dia), o conector traz conta **e** cartão, e qual o formato dos lançamentos? | Fase 6 | O Thiago cria a conta no Meu Pluggy, conecta o Nubank e confere na tela deles. Fato que só ele tem; **as credenciais nunca vão para o chat nem para o git** |
 | P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; falta só refazer as capturas de tela em `docs/img/` | 
 
 ## Antes de divulgar como portfólio
