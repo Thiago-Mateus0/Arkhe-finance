@@ -7,7 +7,7 @@ from fastapi import Depends, FastAPI, HTTPException, UploadFile
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from . import assinaturas, db, parcelas, service
+from . import assinaturas, backup, db, parcelas, service
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -46,6 +46,7 @@ class RuleIn(BaseModel):
 
 @app.post("/import")
 async def import_csv(file: UploadFile, conn=Depends(get_conn)):
+    backup.fazer_automatico(db.DEFAULT_PATH, "antes-de-importar")
     try:
         return service.import_csv(conn, await file.read())
     except ValueError as e:

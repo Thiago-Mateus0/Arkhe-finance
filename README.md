@@ -122,7 +122,10 @@ Com os seus extratos:
 export FINANCAS_OWN_NAMES="SEU NOME COMPLETO"      # suas outras contas (viram transferência)
 ./run.sh                                           # http://localhost:8000
 ./run.sh import extrato.csv fatura.csv             # ou use o botão + na tela
+./run.sh backup                                    # cópia conferida do banco (veja docs/spec/backup.md)
 ```
+
+**Faça backup.** O banco é um arquivo só. O app já guarda uma cópia antes de cada importação, mas isso não protege de perder o disco: rode `./run.sh backup --dir /seu/disco-externo` de vez em quando. Restaurar: `./run.sh restaurar ARQUIVO --sim`.
 
 O `./run.sh` constrói o front sozinho na primeira vez (precisa de **Node 20+**). O app escuta só em `127.0.0.1`: para abrir no celular é preciso expor a porta na rede local, e a API **não tem login** e não deve ser exposta na internet (ADR 0008).
 
