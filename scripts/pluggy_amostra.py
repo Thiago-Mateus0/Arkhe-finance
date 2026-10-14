@@ -9,6 +9,7 @@ Roda na sua máquina, só leitura. Credenciais vêm do arquivo .env (ignorado pe
 
     python scripts/pluggy_amostra.py
 
+Usa GET /v2/transactions (a rota antiga /transactions é descontinuada e devolve 410 em chaves novas).
 Não imprime descrição, nome, valor nem credencial. Só stdlib (sem dependência nova).
 """
 import json
@@ -46,7 +47,11 @@ def chamar(caminho: str, chave: str | None = None, corpo: dict | None = None, pa
         with urllib.request.urlopen(req, data=dados, timeout=30) as r:
             return json.load(r)
     except urllib.error.HTTPError as e:
-        raise SystemExit(f"Erro {e.code} em {caminho}. Confira as credenciais e o PLUGGY_ITEM_ID.")
+        try:
+            msg = json.load(e).get("message", "")
+        except Exception:
+            msg = ""
+        raise SystemExit(f"Erro {e.code} em {caminho}: {msg}".strip())
 
 
 def forma(v, nivel=0):
@@ -77,23 +82,36 @@ def main() -> None:
     for c in contas:
         print(f"-- tipo={c.get('type')} subtipo={c.get('subtype')} moeda={c.get('currencyCode')}")
         print("   campos:", json.dumps(forma(c), ensure_ascii=False))
-        pagina = chamar("/transactions", chave, params={"accountId": c["id"], "pageSize": 500})
-        res = pagina.get("results", [])
-        print(f"   transações na 1ª página: {len(res)}  total={pagina.get('total')} páginas={pagina.get('totalPages')}")
+        res, paginas, proximo = [], 0, None
+        while paginas < 50:  # trava de segurança
+            if proximo:  # 'next' vem pronto como query string; é só anexar ao caminho
+                pagina = chamar("/v2/transactions" + (proximo if proximo.startswith("?") else "?" + proximo), chave)
+            else:
+                pagina = chamar("/v2/transactions", chave, params={"accountId": c["id"]})
+            res += pagina.get("results", [])
+            paginas += 1
+            proximo = pagina.get("next")
+            if not proximo:
+                break
+        print(f"   transações lidas: {len(res)} em {paginas} página(s); há mais: {bool(proximo)}")
         if not res:
             continue
         print("   campos:", json.dumps(forma(res[0]), ensure_ascii=False))
         datas = sorted(t.get("date", "")[:10] for t in res)
         print(f"   período: {datas[0]} a {datas[-1]}")
-        for campo in ("type", "status", "currencyCode"):
+        for campo in ("type", "status", "currencyCode", "operationType"):
             print(f"   {campo}:", dict(Counter(str(t.get(campo)) for t in res)))
         sinal = Counter((str(t.get("type")), "negativo" if (t.get("amount") or 0) < 0 else "positivo") for t in res)
         print("   sinal do valor por tipo:", {f"{a}/{b}": n for (a, b), n in sinal.items()})
-        for extra in ("creditCardMetadata", "paymentData", "merchant"):
+        for extra in ("creditCardMetadata", "paymentData", "merchant", "providerId", "descriptionRaw"):
             print(f"   {extra} presente em:", sum(1 for t in res if t.get(extra)), "de", len(res))
-        parcelas = [t["creditCardMetadata"] for t in res if t.get("creditCardMetadata")]
-        if parcelas:
-            print("   campos de cartão:", json.dumps(forma(parcelas[0]), ensure_ascii=False))
+        cartao = [t["creditCardMetadata"] for t in res if t.get("creditCardMetadata")]
+        if cartao:
+            print("   campos de cartão:", json.dumps(forma(cartao[0]), ensure_ascii=False))
+            print("   parceladas (total de parcelas > 1):",
+                  sum(1 for m in cartao if (m.get("totalInstallments") or 1) > 1), "de", len(cartao))
+            print("   paymentType:", dict(Counter(str(m.get("paymentType")) for m in cartao)))
+        print("   'date' igual a 'createdAt' em:", sum(1 for t in res if str(t.get("date"))[:10] == str(t.get("createdAt"))[:10]), "de", len(res))
         print("   descrições com 'pix'/'parcela':", sum(1 for t in res if any(p in (t.get("description") or "").lower() for p in ("pix", "parcela"))))
 
 
