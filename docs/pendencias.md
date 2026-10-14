@@ -21,8 +21,9 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 |---|---|---|
 | 3 · Uso real | Rodar no dia a dia, importar vários meses, corrigir o que incomodar | ✅ concluída: meses fechados, o que sobrou sem categoria fica |
 | 4 · Controle | Orçamento por categoria, assinaturas, parcelas futuras, tela de regras | ✅ concluída |
-| 5 · Patrimônio | Saldos e investimentos informados à mão, metas, exportação e backup | **próxima** (nada decidido ainda; ver P7) |
-| 6 · Automático e compartilhado | Open Finance, login, hospedagem, uso por duas pessoas | aguardando |
+| 5 · Patrimônio | Saldos e investimentos informados à mão, metas, exportação e backup | aguardando (nada decidido ainda; ver P7) |
+| 6a · Fonte automática | Meu Pluggy como importador (ADR 0020), **antecipada para agora por decisão do Thiago** | **em andamento**: falta P14 (conta dele) |
+| 6 · Compartilhado | Login, hospedagem, uso por duas pessoas | aguardando |
 
 **Critério para sair da fase 3:** o dono fecha um mês inteiro sem pendência e confia nos números.
 
@@ -38,9 +39,10 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P5 | ~~Detectar assinaturas~~ — decidido: assinatura é a categoria "Assinaturas", marcada por regra (ADR 0019); sem detecção automática | — | Feito. Sugestão automática (3+ meses, valor parecido) fica como ideia futura, só se o uso pedir |
 | P6 | ~~Tela para editar e apagar regras~~ — feita: *Regras de categoria*, dentro de Atividades | — | Feito |
 | P7 | Saldo das contas: lembrete mensal para o dono informar? | Fase 5 | Aviso na tela Início, no dia 1 |
-| P8 | Open Finance: qual agregador e qual o custo real? | Fase 6 | Pesquisar só quando chegar a fase 6 |
+| P8 | ~~Open Finance: qual agregador e custo?~~ — decidido: **Meu Pluggy** (gratuito para uso pessoal), como importador novo (ADR 0020) | — | Feito; implementação é a fase 6 |
 | P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Hospedagem simples com login; **a API atual não pode ser exposta** (ADR 0008) |
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
+| P14 | Meu Pluggy: com que frequência a conta do dono atualiza o Nubank (relatos dizem cerca de uma vez por dia), o conector traz conta **e** cartão, e qual o formato dos lançamentos? | Fase 6 | O Thiago cria a conta no Meu Pluggy, conecta o Nubank e confere na tela deles. Fato que só ele tem; **as credenciais nunca vão para o chat nem para o git** |
 | P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
 | P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; capturas de tela refeitas com `scripts/capturas.py` |
 
