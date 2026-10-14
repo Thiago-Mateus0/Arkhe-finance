@@ -78,10 +78,11 @@ def reclassify(conn: sqlite3.Connection) -> None:
     dependem do conjunto todo (conta e fatura juntas), por isso rodam sempre sobre tudo."""
     own = get_own_names(conn)
     rows = [dict(r) for r in conn.execute(
-        "SELECT id, date, source_id, amount_cents, description, counterparty FROM transactions"
+        "SELECT id, date, source_id, amount_cents, description, counterparty, operation_type FROM transactions"
         " WHERE household_id=? AND account='nubank_conta'", (HOUSEHOLD,))]
     for r in rows:
-        r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own)
+        r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own,
+                                        r["operation_type"])
     faturas = [dict(r) for r in conn.execute(
         "SELECT id, date, description, amount_cents, operation_type FROM transactions"
         " WHERE household_id=? AND account='nubank_fatura'",
