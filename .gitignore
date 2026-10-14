@@ -1,6 +1,9 @@
 # Dados financeiros reais nunca vão para o git
 samples/
 *.db
+*.db.bak
+*.bak
+backups/
 *.sqlite3
 .env
 __pycache__/

@@ -18,6 +18,8 @@ if [ "${1:-}" = "demo" ]; then
   python -m financas orcamento "Saúde" 100 >/dev/null
 fi
 if [ "${1:-}" = "import" ]; then shift; exec python -m financas import "$@"; fi
+if [ "${1:-}" = "backup" ]; then shift; exec python -m financas backup "$@"; fi
+if [ "${1:-}" = "restaurar" ]; then shift; exec python -m financas restaurar "$@"; fi
 if [ "${1:-}" = "pluggy" ]; then shift; exec python -m financas pluggy "$@"; fi
 # Front (ADR 0021): constrói web/dist se faltar ou estiver velho.
 if command -v npm >/dev/null 2>&1 && [ -f web/package.json ]; then

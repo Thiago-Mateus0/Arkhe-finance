@@ -59,6 +59,8 @@ pip install -e ".[dev]"
 python -m pytest -q                         # toda a suíte
 ./run.sh                                    # app em http://localhost:8000
 ./run.sh import extrato.csv fatura.csv      # importa sem abrir a tela
+./run.sh backup [--dir PASTA] [--manter N]  # cópia conferida do banco real (nunca no git)
+./run.sh restaurar ARQUIVO [--sim]          # volta o banco para um backup
 ./run.sh pluggy                             # sincroniza com o Meu Pluggy (credenciais no .env)
 ./run.sh demo                               # app com dados fictícios e orçamentos de exemplo (demo.db)
 python -m financas orcamento "Delivery" 150,50   # limite mensal de uma categoria
