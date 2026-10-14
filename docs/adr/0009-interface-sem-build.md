@@ -1,6 +1,6 @@
 # ADR 0009 — Interface em JS puro, mobile-first, instalável
 
-- **Status:** Aceito
+- **Status:** Revogado pelo [ADR 0021](0021-interface-react-tailwind.md)
 - **Data:** 2026-10-09
 - **Fase:** 2 — Interface
 - **Decidido por:** Claude, por delegação do Thiago ("tome as melhores decisões"); **aguarda revisão do Thiago**

@@ -81,7 +81,7 @@ O app classifica cada lançamento em um tipo e só conta como gasto o que é gas
 - **Assinaturas:** a categoria que o dono define por regra; o app mostra o que foi cobrado no mês e a próxima cobrança estimada.
 - **Pix no crédito conta uma vez:** para o próprio dono é transferência; para terceiro vale a linha da fatura, que traz o custo do crédito.
 - **Regras editáveis na tela**, com recategorização imediata e sem tocar no que foi categorizado à mão.
-- **Interface sem build:** HTML, CSS e JS puros, gráficos em SVG escritos à mão.
+- **Interface:** em migração para React + Tailwind (ADR 0021), tela a tela; gráficos em SVG escritos à mão. Enquanto a migração não termina, as telas ainda não migradas seguem em HTML, CSS e JS puros.
 
 ## Decisões de engenharia que valem uma olhada
 
@@ -95,7 +95,7 @@ O app classifica cada lançamento em um tipo e só conta como gasto o que é gas
 | Orçamento: limite fixo, aviso a 80%, comparação em centavos sem arredondar | [ADR 0015](docs/adr/0015-orcamento-por-categoria.md), [spec](docs/spec/orcamento.md) |
 | Pix no crédito: para si mesmo é transferência; para terceiro conta uma vez, pela fatura | [ADR 0017](docs/adr/0017-pix-no-credito-proprio.md), [0018](docs/adr/0018-pix-no-credito-conta-uma-vez.md) |
 | Parcelas futuras como leitura sobre a fatura; assinatura como categoria, sem adivinhar | [ADR 0012](docs/adr/0012-parcelas-futuras.md), [0019](docs/adr/0019-assinaturas-por-categoria.md) |
-| Interface sem build, cor fixa por categoria (paleta validada para daltonismo), identidade própria e tema claro opcional | [ADR 0009](docs/adr/0009-interface-sem-build.md), [0010](docs/adr/0010-cor-por-categoria.md), [0014](docs/adr/0014-identidade-visual-e-temas.md) |
+| Interface em React + Tailwind, cor fixa por categoria (paleta validada para daltonismo), identidade própria e tema claro opcional | [ADR 0021](docs/adr/0021-interface-react-tailwind.md) (revoga o [0009](docs/adr/0009-interface-sem-build.md)), [0010](docs/adr/0010-cor-por-categoria.md), [0014](docs/adr/0014-identidade-visual-e-temas.md) |
 
 Spec diz **o que** o sistema faz (`docs/spec/`); ADR diz **por quê** (`docs/adr/`). **ADR aceito não se edita:** decisão nova revoga a antiga com outro ADR.
 
@@ -129,7 +129,8 @@ No celular, abra o endereço no navegador e use "Adicionar à tela inicial". Por
 ## Estrutura
 
 ```
-src/financas/     importer · classifier · rules · service · parcelas · assinaturas · api · static/ (front)
+src/financas/     importer · classifier · rules · service · parcelas · assinaturas · api · static/ (front antigo)
+web/              front novo em React (migração em andamento, ADR 0021)
 docs/spec/        o que o sistema faz, por área
 docs/adr/         por que cada decisão foi tomada
 docs/pendencias.md  fases e o que falta decidir
