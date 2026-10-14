@@ -44,6 +44,7 @@ Todos os do ADR 0024 (falhar fechado, teste de isolamento, HTTPS, sem valor em l
 - A chave `service_role` e qualquer segredo **nunca** vão para o git, o front ou o chat.
 - Em toda tabela, RLS ligado; tabela sem política nega tudo.
 - Os testes de isolamento rodam contra um Postgres de verdade, não contra mock.
+- **Heartbeat diário** (como no Lifetrailer): uma tarefa agendada faz uma consulta leve, para o projeto gratuito não pausar por inatividade. O Meu Pluggy agendado também conta como atividade.
 
 ## Consequências
 
