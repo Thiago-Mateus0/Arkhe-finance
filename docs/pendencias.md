@@ -44,7 +44,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
 | P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; capturas de tela refeitas com `scripts/capturas.py` |
 | P15 | ~~Como o `./run.sh` serve o front em React?~~ — decidido no aceite do ADR 0021: `./run.sh` faz o build quando `web/dist` não existe ou está velho, e o FastAPI serve `web/dist` | — | Feito na PR do scaffold |
-| P16 | Telas sem desenho no visual novo: Gastos, Fluxo, Regras, Importar e o layout de computador (900 px ou mais) | Migração dessas telas (ADR 0021) | Desenhar um protótipo de cada, como foi feito com Início, Atividades e Orçamento, antes de migrar |
+| P16 | Telas sem desenho no visual novo: Gastos, Fluxo, Regras, Importar e o layout de computador (900 px ou mais). Início migrado (em `/novo`); Atividades e Orçamento têm protótipo e são as próximas | Migração dessas telas (ADR 0021) | Desenhar um protótipo de cada, como foi feito com Início, Atividades e Orçamento, antes de migrar |
 
 ## Antes de divulgar como portfólio
 

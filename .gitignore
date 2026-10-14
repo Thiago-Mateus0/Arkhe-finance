@@ -4,6 +4,8 @@ samples/
 *.sqlite3
 .env
 __pycache__/
+web/node_modules/
+web/dist/
 .venv/
 .pytest_cache/
 *.egg-info/
