@@ -6,7 +6,8 @@ requires-python = ">=3.11"
 dependencies = ["fastapi", "uvicorn", "python-multipart"]
 
 [project.optional-dependencies]
-dev = ["pytest", "httpx"]
+dev = ["pytest", "httpx", "psycopg[binary]"]
+nuvem = ["psycopg[binary]"]  # driver do Postgres hospedado (ADR 0025); o app local não precisa
 capturas = ["playwright"]  # só para scripts/capturas.py (screenshots do README)
 
 [build-system]

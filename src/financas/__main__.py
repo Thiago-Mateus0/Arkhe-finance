@@ -2,6 +2,7 @@
   python -m financas import extrato.csv fatura.csv ...
   python -m financas orcamento "Delivery" 150,50      # limite mensal da categoria
   python -m financas pluggy                           # sincroniza com o Meu Pluggy (credenciais no .env)
+  python -m financas nuvem import ARQ.csv...          # grava no Postgres hospedado (ADR 0025; precisa do extra nuvem)
   python -m financas pluggy --simular                 # idem, numa cópia do banco, sem gravar
   python -m financas backup [--dir PASTA] [--manter N]   # cópia conferida do banco (padrão: backups/, 30 cópias)
   python -m financas backup --criptografar [--dir PASTA] # idem, com senha (.db.gpg): para pasta na nuvem
@@ -66,6 +67,33 @@ def _pluggy(simular: bool = False) -> int:
     print(f"Pluggy: {r['lidas']} lidas — {r['novas']} novas, {r['duplicadas']} já existiam"
           f" (CSV ou sincronização anterior); {r['pendentes']} pendentes e {r['ignoradas']} ignoradas")
     return 0
+
+
+def _nuvem(args: list[str]) -> int:
+    """Grava no Postgres hospedado (ADR 0025): `nuvem import ARQ...` e `nuvem pluggy`."""
+    from . import nuvem, pluggy
+    if not args or args[0] not in ("import", "pluggy") or (args[0] == "import" and len(args) < 2):
+        print("uso: python -m financas nuvem import ARQ.csv... | nuvem pluggy")
+        return 2
+    try:
+        conn = nuvem.connect()
+        service.seed_default_rules_once(conn)
+        if args[0] == "pluggy":
+            r = pluggy.sincronizar(conn)
+            print(f"Pluggy (nuvem): {r['lidas']} lidas — {r['novas']} novas, {r['duplicadas']} já existiam")
+            return 0
+        code = 0
+        for name in args[1:]:
+            try:
+                r = service.import_csv(conn, Path(name).read_bytes())
+                print(f"{name}: {r['formato']} — {r['novas']} novas, {r['duplicadas']} duplicadas")
+            except (OSError, ValueError) as e:
+                print(f"{name}: ERRO — {e}")
+                code = 1
+        return code
+    except (nuvem.ErroNuvem, pluggy.ErroPluggy) as e:
+        print(f"ERRO — {e}")
+        return 1
 
 
 def _aviso_dado_real() -> None:
@@ -159,6 +187,8 @@ def _restaurar(args: list[str]) -> int:
 def main(argv: list[str]) -> int:
     if argv and argv[0] == "backup":
         return _backup(argv[1:])
+    if argv and argv[0] == "nuvem":
+        return _nuvem(argv[1:])
     if argv and argv[0] == "restaurar":
         return _restaurar(argv[1:])
     if argv and argv[0] == "pluggy" and set(argv[1:]) <= {"--simular"}:
