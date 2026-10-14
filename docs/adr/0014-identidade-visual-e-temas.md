@@ -1,6 +1,6 @@
 # ADR 0014 — Identidade visual própria, tema claro opcional e layout de computador
 
-- **Status:** Aceito
+- **Status:** Aceito; a **navegação** e o **layout de computador** foram revogados pelo [ADR 0021](0021-interface-react-tailwind.md). Cor de destaque, marca e tema claro opcional continuam valendo
 - **Data:** 2026-10-09
 - **Fase:** 2 — Design
 - **Decidido por:** Thiago pediu (identidade própria, tema claro opcional, computador); a cor, a marca e a navegação foram escolhidas por Claude e **aguardam revisão do Thiago**

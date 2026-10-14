@@ -1,9 +1,9 @@
 # ADR 0021 — Interface em React + Tailwind, com cartões e navegação flutuante
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-14
 - **Fase:** 2 — Design (reaberta por este ADR)
-- **Decidido por:** Thiago pediu uma interface "mais tecnológica" ("dashboard bonito, tela bonita, sofisticada, com interações") e aprovou o protótipo em `docs/prototipo/interface-celular.html`; a escolha de stack e o guia por tela foram propostos por Claude e **aguardam o aceite do Thiago**
+- **Decidido por:** Thiago pediu uma interface "mais tecnológica" ("dashboard bonito, tela bonita, sofisticada, com interações"), aprovou o protótipo em `docs/prototipo/interface-celular.html` e **aceitou este ADR em 2026-10-14**; a escolha de stack e o guia por tela foram propostos por Claude
 - **Revoga:** [ADR 0009](0009-interface-sem-build.md) (JS puro, sem build, gráficos em SVG à mão) e, do [ADR 0014](0014-identidade-visual-e-temas.md), a parte de **navegação** e de **layout de computador**
 
 ## Contexto
@@ -51,6 +51,14 @@ A referência visual foi um app de finanças comercial que o Thiago usa, mostrad
 | **Gastos, Fluxo, Regras, Importar** | **Ainda sem desenho.** Mantêm o comportamento do `docs/spec/interface.md` e ganham o visual novo quando migrarem (pendência P16) |
 | **Computador (900 px ou mais)** | **Ainda sem desenho** (P16). Vale o menu lateral do ADR 0014 até haver um novo |
 
+## Decisões do aceite
+
+Ao aceitar, o Thiago delegou as perguntas em aberto à recomendação de Claude:
+
+- **Navegação flutuante em pílula e "+" mantidos**, como no protótipo aprovado. O risco de parecer com o app de referência fica registrado em Consequências.
+- **`./run.sh` faz o build sozinho** quando `web/dist` não existe ou está velho, e o FastAPI serve `web/dist` (resolve a P15). O `dist` não é commitado.
+- **Cores de categoria** vêm da paleta validada do ADR 0010, nunca do ciano de destaque.
+
 ## Consequências
 
 - **Esta decisão volta a um padrão que o ADR 0014 tirou de propósito.** O 0014 existe porque a primeira interface ficou parecida com um app comercial no clima (escuro, menu flutuante em pílula, botão "+", lista por dia). O protótipo aprovado traz de volta a pílula e o "+". O que mantém identidade própria: o ciano no lugar do verde-limão, a aurora, a marca, o nome, e a ausência de IA e de plano pago. O Thiago já viu e aprovou o protótipo, mas o risco de "parecer com o Pierre" fica registrado aqui para o portfólio.
@@ -60,5 +68,5 @@ A referência visual foi um app de finanças comercial que o Thiago usa, mostrad
 - **Tela cheia no celular, moldura só no computador:** o protótipo preenche a tela do aparelho; a moldura de celular que aparece no computador é só de demonstração.
 - **Build passa a existir.** A CI ganha `npm ci`, checagem de tipos, `vitest` e `vite build`, e perde o `node --check` do `app.js` quando ele sair. O `./run.sh` precisa continuar sendo suficiente (pendência P15).
 - **PWA:** o manifesto e o ícone passam a sair do build; o ícone em PNG para o iPhone (P10) entra junto.
-- **Documentos a atualizar quando este ADR for aceito:** `CLAUDE.md` (linha "Front" da stack, comandos, "Onde está o quê"), `README.md`, `docs/spec/interface.md` (o "sem build" do cabeçalho) e a nota de status do ADR 0009 e do 0014 para "Revogado". Nada disso é editado antes do aceite.
+- **Documentos atualizados no aceite:** `CLAUDE.md`, `README.md`, `docs/spec/interface.md` e a nota de status do ADR 0009 (Revogado) e do 0014 (navegação e layout de computador revogados).
 - **Licença:** nenhum componente do catálogo 21st.dev é copiado sem conferir a licença do autor; o protótipo não copia código de ninguém.

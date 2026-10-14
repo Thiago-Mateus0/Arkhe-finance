@@ -1,6 +1,6 @@
 # Spec — Interface
 
-Mobile-first, sem build. Código em `src/financas/static/`. O "porquê" está nos ADRs 0009, 0010 e 0014.
+Mobile-first. Código em `web/` (React, ADR 0021) e, nas telas ainda não migradas, em `src/financas/static/`. O "porquê" está nos ADRs 0010, 0014 e 0021. O desenho das telas novas está em `docs/prototipo/interface-celular.html`.
 
 ## Telas
 
