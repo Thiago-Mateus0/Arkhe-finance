@@ -7,6 +7,7 @@ dependencies = ["fastapi", "uvicorn", "python-multipart"]
 
 [project.optional-dependencies]
 dev = ["pytest", "httpx"]
+capturas = ["playwright"]  # só para scripts/capturas.py (screenshots do README)
 
 [build-system]
 requires = ["setuptools"]
