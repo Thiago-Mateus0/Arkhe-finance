@@ -10,7 +10,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 |---|---|---|---|
 | **Levantamento** | ✅ fechado | Quem usa, CSV antes de Open Finance, bancos, objetivo, o que fica para depois | ADRs 0001, 0002, 0006, 0008, 0012, 0013 |
 | **Arquitetura** | ✅ fechado | Stack, o que conta como gasto, chave de duplicata, repasse, dinheiro em centavos | Specs `importacao`, `classificacao`, `categorias`, `relatorios`; ADRs 0003 a 0005 e 0011 |
-| **Design** | ✅ fechado | Telas, cores por categoria, identidade própria, tema claro opcional, layout de computador | Spec `interface`; ADRs 0009, 0010, 0014 |
+| **Design** | 🟡 reaberto | Telas, cores por categoria, identidade própria, tema claro opcional, layout de computador. Reaberto pelo [ADR 0021](adr/0021-interface-react-tailwind.md) (Proposto): interface nova em React + Tailwind, com protótipo aprovado | Spec `interface`; ADRs 0009, 0010, 0014, 0021 |
 | **Código** | 🟡 em andamento | Importador, classificação, regras, relatórios, telas, orçamento, parcelas e assinaturas prontos; uso real (fase 3) e controle (fase 4) concluídos. Falta patrimônio (fase 5) e o automático (fase 6) | `src/`, `tests/` |
 
 **Numeração antiga das fases** (usada nos ADRs, que não se editam depois de aceitos): 0 e 1 = Levantamento e Arquitetura; 2 = Design; 3 em diante = Código. Fase 3 (uso real) é a etapa de código em que você usa o app e aponta o que falta.
@@ -43,6 +43,8 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
 | P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
 | P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; capturas de tela refeitas com `scripts/capturas.py` |
+| P15 | Com o front em React, como o app continua subindo com `./run.sh`? O FastAPI precisa servir o resultado do build | Primeira tela migrada (ADR 0021) | `./run.sh` roda `npm ci` e `npm run build` quando `web/dist` não existe ou está velho, e o FastAPI serve `web/dist`. Alternativa: commitar o `dist`, o que evita Node em quem só quer rodar, mas suja o histórico |
+| P16 | Telas sem desenho no visual novo: Gastos, Fluxo, Regras, Importar e o layout de computador (900 px ou mais) | Migração dessas telas (ADR 0021) | Desenhar um protótipo de cada, como foi feito com Início, Atividades e Orçamento, antes de migrar |
 
 ## Antes de divulgar como portfólio
 
@@ -51,3 +53,4 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 - [ ] O Thiago revisa o ADR **0015** (orçamento), ainda **Proposto**, e muda o status para **Aceito** ou revoga com um ADR novo.
 - [x] Histórico do git conferido: nenhum extrato, nome de terceiro, CPF ou arquivo de banco em nenhum commit (ver P13 sobre o e-mail dos commits).
 - [ ] O Thiago decide o P13 (e-mail dos commits).
+- [ ] O Thiago revisa o ADR **0021** (interface em React + Tailwind), **Proposto**, e muda o status para **Aceito** ou revoga com um ADR novo. Enquanto isso, o front atual não muda.
