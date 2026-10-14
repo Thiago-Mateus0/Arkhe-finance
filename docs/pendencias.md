@@ -11,7 +11,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | **Levantamento** | ✅ fechado | Quem usa, CSV antes de Open Finance, bancos, objetivo, o que fica para depois | ADRs 0001, 0002, 0006, 0008, 0012, 0013 |
 | **Arquitetura** | ✅ fechado | Stack, o que conta como gasto, chave de duplicata, repasse, dinheiro em centavos | Specs `importacao`, `classificacao`, `categorias`, `relatorios`; ADRs 0003 a 0005 e 0011 |
 | **Design** | ✅ fechado | Telas, cores por categoria, identidade própria, tema claro opcional, layout de computador | Spec `interface`; ADRs 0009, 0010, 0014 |
-| **Código** | 🟡 em andamento | Importador, classificação, regras, relatórios e telas prontos; uso real (fase 3) concluído. Falta o controle (fase 4 em diante) | `src/`, `tests/` |
+| **Código** | 🟡 em andamento | Importador, classificação, regras, relatórios, telas, orçamento, parcelas e assinaturas prontos; uso real (fase 3) e controle (fase 4) concluídos. Falta patrimônio (fase 5) e o automático (fase 6) | `src/`, `tests/` |
 
 **Numeração antiga das fases** (usada nos ADRs, que não se editam depois de aceitos): 0 e 1 = Levantamento e Arquitetura; 2 = Design; 3 em diante = Código. Fase 3 (uso real) é a etapa de código em que você usa o app e aponta o que falta.
 
@@ -20,9 +20,10 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | Fase | Objetivo | Estado |
 |---|---|---|
 | 3 · Uso real | Rodar no dia a dia, importar vários meses, corrigir o que incomodar | ✅ concluída: meses fechados, o que sobrou sem categoria fica |
-| 4 · Controle | Orçamento por categoria ✅ (em revisão), assinaturas, parcelas futuras, tela de regras | **em andamento**: orçamento feito; o resto é o próximo |
-| 5 · Patrimônio | Saldos e investimentos informados à mão, metas, exportação e backup | aguardando |
-| 6 · Automático e compartilhado | Open Finance, login, hospedagem, uso por duas pessoas | aguardando |
+| 4 · Controle | Orçamento por categoria, assinaturas, parcelas futuras, tela de regras | ✅ concluída |
+| 5 · Patrimônio | Saldos e investimentos informados à mão, metas, exportação e backup | aguardando (nada decidido ainda; ver P7) |
+| 6a · Fonte automática | Meu Pluggy como importador (ADR 0020), **antecipada para agora por decisão do Thiago** | **em andamento**: falta P14 (conta dele) |
+| 6 · Compartilhado | Login, hospedagem, uso por duas pessoas | aguardando |
 
 **Critério para sair da fase 3:** o dono fecha um mês inteiro sem pendência e confia nos números.
 
@@ -42,11 +43,13 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Hospedagem simples com login; **a API atual não pode ser exposta** (ADR 0008) |
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
 | P14 | Meu Pluggy: com que frequência a conta do dono atualiza o Nubank (relatos dizem cerca de uma vez por dia), o conector traz conta **e** cartão, e qual o formato dos lançamentos? | Fase 6 | O Thiago cria a conta no Meu Pluggy, conecta o Nubank e confere na tela deles. Fato que só ele tem; **as credenciais nunca vão para o chat nem para o git** |
-| P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; falta só refazer as capturas de tela em `docs/img/` | 
+| P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
+| P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; capturas de tela refeitas com `scripts/capturas.py` |
 
 ## Antes de divulgar como portfólio
 
 - [ ] O Thiago revisa e ajusta `docs/processo-de-trabalho.md` para refletir como ele realmente trabalha.
 - [x] O Thiago revisou e aceitou os ADRs que estavam **Propostos** (0003, 0004, 0005, 0007, 0009, 0010, 0011, 0014).
 - [ ] O Thiago revisa o ADR **0015** (orçamento), ainda **Proposto**, e muda o status para **Aceito** ou revoga com um ADR novo.
-- [ ] Conferir o histórico do git por dado pessoal antes de tornar o repositório mais visível.
+- [x] Histórico do git conferido: nenhum extrato, nome de terceiro, CPF ou arquivo de banco em nenhum commit (ver P13 sobre o e-mail dos commits).
+- [ ] O Thiago decide o P13 (e-mail dos commits).

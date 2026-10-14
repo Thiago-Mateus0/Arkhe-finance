@@ -2,7 +2,7 @@
 
 App pessoal de finanças: importa o CSV de conta e de fatura do Nubank, classifica cada lançamento, categoriza por regras e mostra para onde o dinheiro vai. Roda **local** (SQLite), com interface web pensada para celular. Um projeto solo, que resolve uma necessidade real e também serve de portfólio.
 
-**Onde estamos:** Levantamento e Arquitetura fechados; **Design fechado** (identidade própria, tema claro opcional, computador); **Código** em andamento, com a fase 3 (uso real) logo depois. Não reabra decisão de etapa anterior sem ADR. O quadro completo está em `docs/pendencias.md`.
+**Onde estamos:** Levantamento, Arquitetura e Design fechados; **Código**: uso real (fase 3) e controle (fase 4) concluídos, com a fase 5 (patrimônio) como próxima. Não reabra decisão de etapa anterior sem ADR. O quadro completo está em `docs/pendencias.md`.
 
 Pessoa: **Thiago** (dono, decide produto e regra de dinheiro; não é obrigado a ler código — vê o resultado e o PR).
 
@@ -41,7 +41,7 @@ docs/adr/*.md         ← por que decidi assim. Uma decisão por arquivo.
 docs/pendencias.md    ← o que falta decidir, por fase. Também guarda o status do projeto.
 docs/processo-de-trabalho.md ← como o projeto é construído (inclui o uso de IA).
 docs/agents/          ← config das skills (issue tracker, docs de domínio).
-src/financas/         ← código: importer, classifier, rules, service, api, static/ (front)
+src/financas/         ← código: importer, classifier, rules, service, parcelas, assinaturas, api, static/ (front)
 data/demo/            ← CSVs 100% fictícios (gerados por scripts/gerar_demo.py)
 samples/              ← extratos REAIS. Ignorado pelo git. Nunca commitar.
 tests/                ← pytest; fixtures fictícias em tests/fixtures/
@@ -61,6 +61,7 @@ python -m pytest -q                         # toda a suíte
 ./run.sh demo                               # app com dados fictícios e orçamentos de exemplo (demo.db)
 python -m financas orcamento "Delivery" 150,50   # limite mensal de uma categoria
 python scripts/gerar_demo.py                # regenera data/demo/ (determinístico)
+pip install -e ".[capturas]" && python scripts/capturas.py   # refaz docs/img/ com a demo
 node --check src/financas/static/app.js     # sintaxe do front
 ```
 
