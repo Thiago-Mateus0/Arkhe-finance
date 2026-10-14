@@ -212,18 +212,45 @@ def _sha256(arquivo: Path) -> str:
 
 
 def criptografar(arquivo: Path, destino: Path, senha: str) -> None:
-    r = _gpg(["--symmetric", "--cipher-algo", "AES256", "--s2k-digest-algo", "SHA512",
+    r = _gpg(["--no-symkey-cache", "--symmetric", "--cipher-algo", "AES256", "--s2k-digest-algo", "SHA512",
               "--s2k-count", "65011712", "-o", str(destino), str(arquivo)], senha)
     if r.returncode != 0:
         raise ErroBackup("Não consegui criptografar o backup (o gpg recusou).")
     os.chmod(destino, 0o600)
 
 
+def _status_do_gpg(arquivo: Path) -> list[list[str]]:
+    try:
+        linhas = arquivo.read_text(encoding="utf-8", errors="replace").splitlines()
+    except OSError:
+        return []
+    return [l.split()[1:] for l in linhas if l.startswith("[GNUPG:] ")]
+
+
 def descriptografar(arquivo: Path, destino: Path, senha: str) -> None:
-    r = _gpg(["--decrypt", "-o", str(destino), str(arquivo)], senha)
+    """Abre só o que foi **de fato** criptografado com senha e com proteção de integridade.
+
+    O `gpg --decrypt` devolve sucesso também para mensagem OpenPGP sem criptografia (só "dado
+    literal"). Quem pudesse trocar o arquivo na nuvem entregaria um banco forjado sem saber a senha.
+    Por isso o resultado só vale com os estados do gpg abaixo.
+    """
+    status = destino.with_name(destino.name + ".status")
+    try:
+        r = _gpg(["--no-symkey-cache", "--status-file", str(status), "--decrypt", "-o", str(destino), str(arquivo)], senha)
+        eventos = _status_do_gpg(status)
+    finally:
+        status.unlink(missing_ok=True)
     if r.returncode != 0:
         destino.unlink(missing_ok=True)
         raise ErroBackup("Senha incorreta, ou o arquivo está corrompido.")
+
+    nomes = {e[0] for e in eventos if e}
+    info = next((e for e in eventos if e and e[0] == "DECRYPTION_INFO"), [])
+    aead = len(info) >= 4 and info[3] not in ("0", "")  # DECRYPTION_INFO <mdc> <cifra> <aead>
+    protegido = "NEED_PASSPHRASE_SYM" in nomes and "DECRYPTION_OKAY" in nomes and ("GOODMDC" in nomes or aead)
+    if not protegido or "ENC_TO" in nomes:
+        destino.unlink(missing_ok=True)
+        raise ErroBackup("Este arquivo não foi protegido com senha por este app (ou foi trocado). Não vou abrir.")
     os.chmod(destino, 0o600)
 
 

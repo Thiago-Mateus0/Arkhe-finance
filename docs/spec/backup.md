@@ -22,7 +22,7 @@ O banco é um único arquivo SQLite (`financas.db`, ou o que `FINANCAS_DB` apont
 - **Conferido depois de protegido:** o arquivo é aberto com a senha e comparado ao original antes de ser guardado.
 - **Abre sem este app:** é GnuPG padrão (AES-256). Em qualquer computador: `gpg -d financas-….db.gpg > financas.db`.
 - **Guardar na nuvem:** aponte `--dir` para a pasta sincronizada, ou copie o `.db.gpg` para o site do serviço pelo navegador (arrastar e soltar).
-- **Restaurar:** `./run.sh restaurar ARQUIVO.db.gpg [--sim]` pede a senha. Senha errada ou arquivo alterado são recusados sem tocar no banco.
+- **Restaurar:** `./run.sh restaurar ARQUIVO.db.gpg [--sim]` pede a senha. Senha errada, arquivo alterado ou arquivo que **não foi criptografado com senha** (por exemplo uma mensagem OpenPGP sem criptografia, posta no lugar por quem alcança a pasta da nuvem) são recusados sem tocar no banco.
 - **Agendar:** aponte `FINANCAS_BACKUP_SENHA_ARQUIVO` para um arquivo seu com a senha (permissão `600`; o app recusa se outras pessoas puderem ler).
 - **Senha perdida = backup perdido.** Guarde num gerenciador de senhas. Nem este app nem ninguém recupera.
 - **O que o serviço da nuvem ainda vê:** que existe um arquivo, o nome e o tamanho. Não o conteúdo.

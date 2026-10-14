@@ -374,3 +374,31 @@ def test_cli_criptografar_sem_terminal_nem_arquivo_explica(banco, tmp_path, monk
     monkeypatch.setattr("sys.stdin", open(os.devnull))  # não é terminal
     assert cli.main(["backup", "--criptografar", "--dir", str(tmp_path / "n")]) == 1
     assert "FINANCAS_BACKUP_SENHA_ARQUIVO" in capsys.readouterr().out
+
+
+@precisa_gpg
+def test_mensagem_sem_criptografia_nao_e_aceita_como_backup(banco, tmp_path, gnupg_isolado):
+    """O gpg 'abre' mensagem OpenPGP literal (sem senha) com sucesso; o app não pode aceitar isso."""
+    forjado = tmp_path / "forjado.db.gpg"
+    r = subprocess.run(["gpg", "--batch", "--yes", "--quiet", "--store", "-o", str(forjado), str(banco)],
+                       capture_output=True)
+    assert r.returncode == 0 and forjado.exists()
+    saida = tmp_path / "saida.db"
+    with pytest.raises(backup.ErroBackup, match="não foi protegido com senha"):
+        backup.descriptografar(forjado, saida, SENHA)
+    assert not saida.exists() and not list(tmp_path.glob("*.status"))
+
+    # e a restauração por cima do banco real nem encosta nele
+    antes = banco.read_bytes()
+    with pytest.raises(backup.ErroBackup):
+        backup.restaurar_criptografado(forjado, banco, SENHA, substituir=True)
+    assert banco.read_bytes() == antes
+
+
+@precisa_gpg
+def test_arquivo_legitimo_continua_abrindo_e_nao_deixa_status_para_tras(banco, tmp_path, gnupg_isolado):
+    r = backup.fazer_criptografado(banco, tmp_path / "nuvem", SENHA)
+    aberto = tmp_path / "aberto.db"
+    backup.descriptografar(r["arquivo"], aberto, SENHA)
+    assert _linhas(aberto) == _linhas(banco)
+    assert not list(tmp_path.glob("*.status"))
