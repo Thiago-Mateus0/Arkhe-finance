@@ -62,15 +62,15 @@ def main() -> None:
                     pg = nav.new_page(viewport=vp)
                     pg.on("pageerror", lambda e: erros.append(str(e)))
                     pg.goto(url)
-                    pg.wait_for_function("document.querySelector('#app').children.length > 0")
+                    pg.wait_for_selector(".page .card")
                     if claro:
-                        pg.click('[data-act="theme"]')
-                    pg.wait_for_timeout(500)
+                        pg.click('[aria-label="Usar tema claro"]')
+                    pg.wait_for_timeout(1800)  # animações de entrada
                     return pg
 
-                def ir(pg, view):
-                    pg.click(f'#nav [data-go="{view}"]')
-                    pg.wait_for_timeout(500)
+                def ir(pg, rota):
+                    pg.evaluate("rota => { location.hash = '#/' + rota }", rota)
+                    pg.wait_for_timeout(1500)
 
                 def tirar(pg, nome):
                     pg.screenshot(path=str(IMG / f"{nome}.png"))
@@ -80,23 +80,23 @@ def main() -> None:
                     sufixo = "-claro" if claro else ""
                     pg = pagina(CELULAR, claro)
                     tirar(pg, f"inicio{sufixo}")
-                    ir(pg, "spend"); tirar(pg, f"gastos{sufixo}")
+                    ir(pg, "gastos"); tirar(pg, f"gastos{sufixo}")
                     if not claro:
-                        pg.mouse.wheel(0, 700); pg.wait_for_timeout(300); tirar(pg, "gastos-categorias")
-                    ir(pg, "activity"); tirar(pg, f"atividades{sufixo}")
+                        pg.mouse.wheel(0, 700); pg.wait_for_timeout(500); tirar(pg, "gastos-categorias")
+                    ir(pg, "atividades"); tirar(pg, f"atividades{sufixo}")
                     if not claro:
-                        pg.locator("[data-tx]").first.click(); pg.wait_for_timeout(400); tirar(pg, "categorizar")
+                        pg.locator("button.tx").first.click(); pg.wait_for_timeout(700); tirar(pg, "categorizar")
                         pg.keyboard.press("Escape")
-                        pg.click('[data-go="rules"]'); pg.wait_for_timeout(500); tirar(pg, "regras")
-                        ir(pg, "flow"); tirar(pg, "fluxo")
-                    ir(pg, "budget"); tirar(pg, f"orcamento{sufixo}")
+                        ir(pg, "regras"); tirar(pg, "regras")
+                        ir(pg, "fluxo"); tirar(pg, "fluxo")
+                    ir(pg, "orcamento"); tirar(pg, f"orcamento{sufixo}")
                     pg.close()
 
                 for claro in (False, True):
                     pg = pagina(COMPUTADOR, claro)
                     tirar(pg, "computador-claro" if claro else "computador")
                     if not claro:
-                        ir(pg, "budget"); tirar(pg, "computador-orcamento")
+                        ir(pg, "orcamento"); tirar(pg, "computador-orcamento")
                     pg.close()
 
                 nav.close()

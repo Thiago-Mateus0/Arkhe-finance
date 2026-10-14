@@ -2,7 +2,7 @@
 
 App pessoal de finanças: importa o CSV de conta e de fatura do Nubank, classifica cada lançamento, categoriza por regras e mostra para onde o dinheiro vai. Roda **local** (SQLite), com interface web pensada para celular. Um projeto solo, que resolve uma necessidade real e também serve de portfólio.
 
-**Onde estamos:** Levantamento e Arquitetura fechados; **Design reaberto pelo ADR 0021** (interface nova em React, migração tela a tela); **Código**: uso real (fase 3) e controle (fase 4) concluídos, com a fase 5 (patrimônio) como próxima. Não reabra decisão de etapa anterior sem ADR. O quadro completo está em `docs/pendencias.md`.
+**Onde estamos:** Levantamento, Arquitetura e Design fechados (interface em React, ADR 0021); **Código**: uso real (fase 3) e controle (fase 4) concluídos, com a fase 5 (patrimônio) como próxima. Não reabra decisão de etapa anterior sem ADR. O quadro completo está em `docs/pendencias.md`.
 
 Pessoa: **Thiago** (dono, decide produto e regra de dinheiro; não é obrigado a ler código — vê o resultado e o PR).
 
@@ -14,7 +14,7 @@ Pessoa: **Thiago** (dono, decide produto e regra de dinheiro; não é obrigado a
 |---|---|
 | Backend | Python 3.11+ · FastAPI · SQLite (stdlib `sqlite3`) — ADR 0001 |
 | Dados | CSV do Nubank hoje; Open Finance depois, atrás da mesma camada de importação — ADR 0002 |
-| Front | React + TypeScript + Vite + Tailwind em `web/`, mobile-first, instalável (PWA) — ADR 0021. Migração tela a tela: o front antigo (`src/financas/static/`, ADR 0009, revogado) segue servido até a última tela migrar |
+| Front | React + TypeScript + Vite + Tailwind em `web/`, mobile-first, instalável (PWA) — ADR 0021. O FastAPI serve `web/dist` |
 | Testes | pytest · vitest (front) · Playwright só para capturas de tela |
 
 ---
@@ -41,8 +41,8 @@ docs/adr/*.md         ← por que decidi assim. Uma decisão por arquivo.
 docs/pendencias.md    ← o que falta decidir, por fase. Também guarda o status do projeto.
 docs/processo-de-trabalho.md ← como o projeto é construído (inclui o uso de IA).
 docs/agents/          ← config das skills (issue tracker, docs de domínio).
-src/financas/         ← código: importer, classifier, rules, service, parcelas, assinaturas, api, static/ (front antigo)
-web/                  ← front novo (React); `npm run build` gera web/dist, que o FastAPI serve
+src/financas/         ← código: importer, classifier, rules, service, parcelas, assinaturas, api
+web/                  ← front (React); `npm run build` gera web/dist, que o FastAPI serve
 data/demo/            ← CSVs 100% fictícios (gerados por scripts/gerar_demo.py)
 samples/              ← extratos REAIS. Ignorado pelo git. Nunca commitar.
 tests/                ← pytest; fixtures fictícias em tests/fixtures/
@@ -63,9 +63,9 @@ python -m pytest -q                         # toda a suíte
 ./run.sh demo                               # app com dados fictícios e orçamentos de exemplo (demo.db)
 python -m financas orcamento "Delivery" 150,50   # limite mensal de uma categoria
 python scripts/gerar_demo.py                # regenera data/demo/ (determinístico)
-pip install -e ".[capturas]" && python scripts/capturas.py   # refaz docs/img/ com a demo
-node --check src/financas/static/app.js     # sintaxe do front antigo (sai com a última tela migrada)
-(cd web && npm ci && npm run check && npm test && npm run build)   # front novo
+pip install -e ".[capturas]" && python scripts/capturas.py   # refaz docs/img/ com a demo (precisa do build)
+(cd web && npm ci && npm run check && npm test && npm run build)   # front: tipos, testes e build
+(cd web && npm run dev)                     # front com recarga (a API em :8000)
 ```
 
 Nomes das suas outras contas (viram transferência, não gasto): `export FINANCAS_OWN_NAMES="NOME COMPLETO;OUTRO NOME"`.
