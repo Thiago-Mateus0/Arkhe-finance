@@ -26,3 +26,10 @@ jobs:
         with:
           node-version: 22
       - run: node --check src/financas/static/app.js
+      - name: front novo (tipos, testes e build)
+        working-directory: web
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run build

@@ -201,6 +201,28 @@ def index():
     return (STATIC / "index.html").read_text(encoding="utf-8")
 
 
+# Front novo (ADR 0021): construído por `npm run build` em web/. Durante a migração fica em /novo;
+# o app antigo segue em /. Lido a cada pedido para o `./run.sh` poder construir depois de subir.
+WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
+
+
+@app.get("/novo")
+@app.get("/novo/{caminho:path}")
+def front_novo(caminho: str = ""):
+    raiz = WEB_DIST.resolve()
+    index = raiz / "index.html"
+    if not index.is_file():
+        raise HTTPException(404, "O front novo ainda não foi construído: rode ./run.sh (precisa de Node)")
+    if not caminho:
+        return FileResponse(index)
+    alvo = (raiz / caminho).resolve()
+    if alvo.is_file() and alvo.is_relative_to(raiz):
+        return FileResponse(alvo)
+    if Path(caminho).suffix:  # arquivo que não existe: 404 de verdade, não a página
+        raise HTTPException(404, "Arquivo não encontrado")
+    return FileResponse(index)
+
+
 @app.get("/manifest.webmanifest")
 def manifest():
     return FileResponse(STATIC / "manifest.webmanifest", media_type="application/manifest+json")

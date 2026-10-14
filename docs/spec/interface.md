@@ -16,6 +16,10 @@ Mobile-first. Código em `web/` (React, ADR 0021) e, nas telas ainda não migrad
 | **Fluxo** | Receitas e gastos por dia (Geral, Entradas, Saídas) e saldo do mês |
 | **Importar** | Escolher ou arrastar vários CSV; resultado por arquivo |
 
+## Migração para o front novo (ADR 0021)
+
+O **Início novo** está em `/novo`; as demais telas seguem no app antigo, em `/`, até migrarem. Mostra, para o mês escolhido: gasto no cartão e parcelas a vir (carrossel), avisos de lançamentos sem categoria e de orçamento (estourou ou perto do limite), fluxo de caixa, assinaturas, orçamento usado, parcelas a vir, gasto acumulado (tocar ou arrastar mostra o valor até o dia), barra de gastos por categoria e transações recentes. O olho oculta os valores (mesma preferência do app antigo). A aba Patrimônio entra com a fase 5.
+
 ## Navegação e temas
 
 - **Celular:** barra de abas com rótulos (Início, Atividades, Gastos, Orçamento, Fluxo, Importar), fixa embaixo; cabe em telas de 320 px sem cortar texto nem rolar para o lado.
