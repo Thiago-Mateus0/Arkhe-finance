@@ -4,10 +4,14 @@ Usa a API de backup do próprio SQLite: a cópia é consistente mesmo com o app 
 só aparece com o nome final depois de conferido. Os arquivos têm dado financeiro real: ficam com
 permissão só do dono e nunca devem ir para o git (a pasta `backups/` está no .gitignore).
 """
+import hashlib
 import logging
 import os
 import re
+import shutil
 import sqlite3
+import subprocess
+import tempfile
 from datetime import datetime
 from pathlib import Path
 
@@ -171,3 +175,108 @@ def fazer_automatico(origem: Path, etiqueta: str, agora: datetime | None = None)
     except (ErroBackup, OSError, sqlite3.Error) as e:
         log.warning("backup automático (%s) não foi feito: %s", etiqueta, type(e).__name__)
         return None
+
+
+# ---- cópia criptografada (para guardar numa pasta na nuvem) ----
+# Usa o GnuPG (criptografia simétrica, AES-256, com checagem de integridade). Escolha deliberada: o
+# arquivo abre com `gpg -d` em qualquer computador, mesmo sem este app, e não entra dependência nova.
+
+PADRAO_GPG = re.compile(r"^financas-\d{8}-\d{6}(-\d+)?\.db\.gpg$")
+SENHA_MINIMA = 10
+
+
+def gpg_disponivel() -> bool:
+    return shutil.which("gpg") is not None
+
+
+def validar_senha(senha: str) -> None:
+    if len(senha) < SENHA_MINIMA:
+        raise ErroBackup(f"Use uma senha de pelo menos {SENHA_MINIMA} caracteres.")
+
+
+def _gpg(args: list[str], senha: str) -> subprocess.CompletedProcess:
+    if not gpg_disponivel():
+        raise ErroBackup("Para criptografar é preciso o gpg. Instale com: sudo apt install gnupg")
+    # A senha vai pela entrada padrão: não aparece na linha de comando nem na lista de processos.
+    return subprocess.run(
+        ["gpg", "--batch", "--yes", "--quiet", "--pinentry-mode", "loopback", "--passphrase-fd", "0", *args],
+        input=(senha + "\n").encode(), capture_output=True, check=False)
+
+
+def _sha256(arquivo: Path) -> str:
+    h = hashlib.sha256()
+    with open(arquivo, "rb") as f:
+        for bloco in iter(lambda: f.read(1 << 20), b""):
+            h.update(bloco)
+    return h.hexdigest()
+
+
+def criptografar(arquivo: Path, destino: Path, senha: str) -> None:
+    r = _gpg(["--symmetric", "--cipher-algo", "AES256", "--s2k-digest-algo", "SHA512",
+              "--s2k-count", "65011712", "-o", str(destino), str(arquivo)], senha)
+    if r.returncode != 0:
+        raise ErroBackup("Não consegui criptografar o backup (o gpg recusou).")
+    os.chmod(destino, 0o600)
+
+
+def descriptografar(arquivo: Path, destino: Path, senha: str) -> None:
+    r = _gpg(["--decrypt", "-o", str(destino), str(arquivo)], senha)
+    if r.returncode != 0:
+        destino.unlink(missing_ok=True)
+        raise ErroBackup("Senha incorreta, ou o arquivo está corrompido.")
+    os.chmod(destino, 0o600)
+
+
+def fazer_criptografado(origem: Path, pasta: Path, senha: str, manter: int | None = MANTER_PADRAO,
+                        agora: datetime | None = None) -> dict:
+    """Backup conferido, criptografado e verificado (abre com a senha e dá o mesmo conteúdo).
+
+    A cópia sem senha existe só numa pasta temporária privada, apagada ao final; só o arquivo
+    `.db.gpg` chega à pasta de destino (pode ser uma pasta sincronizada com a nuvem).
+    """
+    validar_senha(senha)
+    pasta = Path(pasta)
+    try:
+        pasta.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise _erro_de_gravacao(e, pasta) from e
+    with tempfile.TemporaryDirectory(prefix="financas-bk-") as tmp:  # 0700, só o dono
+        tmp = Path(tmp)
+        simples = fazer(origem, tmp, manter=None, agora=agora)
+        base = simples["arquivo"].name + ".gpg"
+        final, n = pasta / base, 1
+        while final.exists():
+            final = pasta / base.replace(".db.gpg", f"-{n}.db.gpg")
+            n += 1
+        parcial = final.with_name(final.name + ".parcial")
+        try:
+            criptografar(simples["arquivo"], parcial, senha)
+            conferencia = tmp / "conferencia.db"
+            descriptografar(parcial, conferencia, senha)
+            if _sha256(conferencia) != _sha256(simples["arquivo"]):
+                raise ErroBackup("A cópia criptografada não bate com o original; nada foi guardado.")
+            os.replace(parcial, final)
+        except OSError as e:
+            raise _erro_de_gravacao(e, pasta) from e
+        finally:
+            parcial.unlink(missing_ok=True)
+        tamanho, tabelas = final.stat().st_size, simples["tabelas"]
+
+    removidos: list[str] = []
+    if manter and manter > 0:
+        antigos = sorted((p for p in pasta.iterdir() if PADRAO_GPG.match(p.name)), key=lambda p: p.name, reverse=True)
+        for velho in antigos[manter:]:
+            velho.unlink()
+            removidos.append(velho.name)
+    return {"arquivo": final, "bytes": tamanho, "tabelas": tabelas, "removidos": removidos}
+
+
+def restaurar_criptografado(arquivo: Path, destino: Path, senha: str, substituir: bool = False,
+                            agora: datetime | None = None) -> dict:
+    arquivo = Path(arquivo)
+    if not arquivo.is_file():
+        raise ErroBackup(f"Não achei o arquivo de backup {arquivo}.")
+    with tempfile.TemporaryDirectory(prefix="financas-bk-") as tmp:
+        simples = Path(tmp) / "aberto.db"
+        descriptografar(arquivo, simples, senha)
+        return restaurar(simples, destino, substituir=substituir, agora=agora)

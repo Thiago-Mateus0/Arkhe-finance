@@ -123,6 +123,7 @@ export FINANCAS_OWN_NAMES="SEU NOME COMPLETO"      # suas outras contas (viram t
 ./run.sh                                           # http://localhost:8000
 ./run.sh import extrato.csv fatura.csv             # ou use o botão + na tela
 ./run.sh backup                                    # cópia conferida do banco (veja docs/spec/backup.md)
+./run.sh backup --criptografar --dir PASTA-DA-NUVEM   # idem, protegida por senha (.db.gpg)
 ```
 
 **Faça backup.** O banco é um arquivo só. O app já guarda uma cópia antes de cada importação, mas isso não protege de perder o disco: rode `./run.sh backup --dir /seu/disco-externo` de vez em quando. Restaurar: `./run.sh restaurar ARQUIVO --sim`.

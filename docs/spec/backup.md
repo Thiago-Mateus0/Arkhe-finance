@@ -14,6 +14,20 @@ O banco é um único arquivo SQLite (`financas.db`, ou o que `FINANCAS_DB` apont
 
 (Sem o `run.sh`: `python -m financas backup` e `python -m financas restaurar`.)
 
+## Criptografado, para guardar na nuvem
+
+`./run.sh backup --criptografar [--dir PASTA]` faz o mesmo backup conferido e o guarda como `financas-AAAAMMDD-HHMMSS.db.gpg`, protegido por uma senha que **você** escolhe (pelo menos 10 caracteres, digitada duas vezes).
+
+- **Só o arquivo protegido chega ao destino.** A cópia sem senha existe apenas numa pasta temporária privada, apagada ao fim.
+- **Conferido depois de protegido:** o arquivo é aberto com a senha e comparado ao original antes de ser guardado.
+- **Abre sem este app:** é GnuPG padrão (AES-256). Em qualquer computador: `gpg -d financas-….db.gpg > financas.db`.
+- **Guardar na nuvem:** aponte `--dir` para a pasta sincronizada, ou copie o `.db.gpg` para o site do serviço pelo navegador (arrastar e soltar).
+- **Restaurar:** `./run.sh restaurar ARQUIVO.db.gpg [--sim]` pede a senha. Senha errada ou arquivo alterado são recusados sem tocar no banco.
+- **Agendar:** aponte `FINANCAS_BACKUP_SENHA_ARQUIVO` para um arquivo seu com a senha (permissão `600`; o app recusa se outras pessoas puderem ler).
+- **Senha perdida = backup perdido.** Guarde num gerenciador de senhas. Nem este app nem ninguém recupera.
+- **O que o serviço da nuvem ainda vê:** que existe um arquivo, o nome e o tamanho. Não o conteúdo.
+- **Precisa do `gpg`** (`sudo apt install gnupg`). Sem ele o comando explica e não faz nada.
+
 ## Automático
 
 Antes de **importar** (tela, `./run.sh import` e a API) e antes de **sincronizar com o Pluggy**, o app cria sozinho uma cópia `financas-AAAAMMDD-HHMMSS-antes-de-importar.db` (ou `-antes-de-sincronizar`) em `backups/`.
@@ -43,7 +57,7 @@ O app não agenda sozinho. Para uma cópia por dia, em `crontab -e`:
 
 ## O que não faz
 
-- **Não criptografa** o arquivo. Guarde em disco ou pasta que já seja só sua. Criptografia entra junto da hospedagem (ADR 0024), se for necessária.
+- **Sem `--criptografar`, o arquivo não é protegido por senha.** Guarde em disco ou pasta que já seja só sua. O backup automático (antes de importar) também não é criptografado: fica ao lado do banco.
 - **Não copia para fora da máquina sozinho:** uma cópia ao lado do banco protege de engano, não de perda do disco. Aponte `--dir` para um disco externo ou pasta sincronizada.
 - **Não agenda sozinho:** veja "Agendar" acima.
 

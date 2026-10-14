@@ -262,3 +262,115 @@ def test_cli_com_destino_invalido_sai_com_erro_amigavel(banco, tmp_path, monkeyp
 def test_erro_de_espaco_em_disco_tem_mensagem_propria(tmp_path):
     e = OSError(28, "No space left on device")
     assert "Sem espaço" in str(backup._erro_de_gravacao(e, tmp_path))
+
+
+# ---- cópia criptografada (pasta na nuvem) ----
+import shutil
+import subprocess
+import tempfile
+
+SENHA = "uma-senha-bem-longa-123"
+precisa_gpg = pytest.mark.skipif(shutil.which("gpg") is None, reason="gpg não instalado")
+
+
+@pytest.fixture
+def gnupg_isolado(monkeypatch):
+    """GNUPGHOME curto e descartável: o teste não toca no chaveiro de ninguém (e o socket cabe no limite)."""
+    casa = tempfile.mkdtemp(prefix="gh-", dir="/tmp")
+    os.chmod(casa, 0o700)
+    monkeypatch.setenv("GNUPGHOME", casa)
+    yield casa
+    if shutil.which("gpgconf"):
+        subprocess.run(["gpgconf", "--homedir", casa, "--kill", "all"], capture_output=True)
+    shutil.rmtree(casa, ignore_errors=True)
+
+
+@precisa_gpg
+def test_criptografado_so_deixa_o_gpg_na_pasta_e_abre_com_a_senha(banco, tmp_path, gnupg_isolado):
+    nuvem = tmp_path / "nuvem"
+    r = backup.fazer_criptografado(banco, nuvem, SENHA)
+    assert r["arquivo"].name.endswith(".db.gpg") and backup.PADRAO_GPG.match(r["arquivo"].name)
+    assert [p.name for p in nuvem.iterdir()] == [r["arquivo"].name]  # nenhuma cópia sem senha ficou lá
+    assert stat.S_IMODE(os.stat(r["arquivo"]).st_mode) == 0o600
+    assert r["tabelas"]["transactions"] == _linhas(banco)
+    assert b"SQLite format" not in r["arquivo"].read_bytes()  # não é o banco em claro
+
+    aberto = tmp_path / "aberto.db"
+    backup.descriptografar(r["arquivo"], aberto, SENHA)
+    assert _linhas(aberto) == _linhas(banco)
+
+
+@precisa_gpg
+def test_senha_errada_nao_abre_e_nao_deixa_lixo(banco, tmp_path, gnupg_isolado):
+    r = backup.fazer_criptografado(banco, tmp_path / "nuvem", SENHA)
+    saida = tmp_path / "x.db"
+    with pytest.raises(backup.ErroBackup, match="Senha incorreta"):
+        backup.descriptografar(r["arquivo"], saida, "outra-senha-qualquer")
+    assert not saida.exists()
+
+
+@precisa_gpg
+def test_arquivo_adulterado_e_recusado(banco, tmp_path, gnupg_isolado):
+    r = backup.fazer_criptografado(banco, tmp_path / "nuvem", SENHA)
+    dados = bytearray(r["arquivo"].read_bytes())
+    dados[len(dados) // 2] ^= 0xFF  # um bit trocado no meio
+    r["arquivo"].write_bytes(bytes(dados))
+    with pytest.raises(backup.ErroBackup, match="Senha incorreta, ou o arquivo está corrompido"):
+        backup.descriptografar(r["arquivo"], tmp_path / "x.db", SENHA)
+
+
+def test_senha_curta_e_recusada_antes_de_qualquer_coisa(banco, tmp_path):
+    with pytest.raises(backup.ErroBackup, match="pelo menos"):
+        backup.fazer_criptografado(banco, tmp_path / "nuvem", "curta")
+    assert not (tmp_path / "nuvem").exists() or not list((tmp_path / "nuvem").iterdir())
+
+
+@precisa_gpg
+def test_retencao_do_criptografado_so_mexe_nos_gpg(banco, tmp_path, gnupg_isolado):
+    nuvem = tmp_path / "nuvem"
+    nuvem.mkdir()
+    (nuvem / "foto.jpg").write_text("minha")
+    base = datetime(2026, 1, 1)
+    for i in range(4):
+        backup.fazer_criptografado(banco, nuvem, SENHA, manter=2, agora=base + timedelta(days=i))
+    gpgs = sorted(p.name for p in nuvem.iterdir() if backup.PADRAO_GPG.match(p.name))
+    assert len(gpgs) == 2 and (nuvem / "foto.jpg").exists()
+
+
+@precisa_gpg
+def test_restaurar_do_criptografado_com_sim_guarda_o_atual(banco, tmp_path, gnupg_isolado):
+    r = backup.fazer_criptografado(banco, tmp_path / "nuvem", SENHA)
+    conn = db.connect(banco)
+    conn.execute("DELETE FROM transactions")
+    conn.commit()
+    conn.close()
+    with pytest.raises(backup.ErroBackup, match="--sim"):
+        backup.restaurar_criptografado(r["arquivo"], banco, SENHA)
+    out = backup.restaurar_criptografado(r["arquivo"], banco, SENHA, substituir=True)
+    assert _linhas(banco) > 0 and out["copia_de_seguranca"].exists()
+
+
+@precisa_gpg
+def test_cli_criptografar_e_restaurar_com_senha_em_arquivo(banco, tmp_path, monkeypatch, capsys, gnupg_isolado):
+    monkeypatch.setattr(db, "DEFAULT_PATH", banco)
+    senha = tmp_path / "senha.txt"
+    senha.write_text(SENHA + "\n")
+    senha.chmod(0o644)  # legível por outros: tem que recusar
+    monkeypatch.setenv("FINANCAS_BACKUP_SENHA_ARQUIVO", str(senha))
+    assert cli.main(["backup", "--criptografar", "--dir", str(tmp_path / "n")]) == 1
+    assert "legível por outras pessoas" in capsys.readouterr().out
+
+    senha.chmod(0o600)
+    assert cli.main(["backup", "--criptografar", "--dir", str(tmp_path / "n")]) == 0
+    saida = capsys.readouterr().out
+    assert "Backup criptografado:" in saida and "Guarde a senha" in saida and SENHA not in saida
+    arquivo = next((tmp_path / "n").iterdir())
+    assert cli.main(["restaurar", str(arquivo), "--sim"]) == 0
+
+
+def test_cli_criptografar_sem_terminal_nem_arquivo_explica(banco, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(db, "DEFAULT_PATH", banco)
+    monkeypatch.delenv("FINANCAS_BACKUP_SENHA_ARQUIVO", raising=False)
+    monkeypatch.setattr("sys.stdin", open(os.devnull))  # não é terminal
+    assert cli.main(["backup", "--criptografar", "--dir", str(tmp_path / "n")]) == 1
+    assert "FINANCAS_BACKUP_SENHA_ARQUIVO" in capsys.readouterr().out
