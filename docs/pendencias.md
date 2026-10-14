@@ -57,8 +57,8 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 
 - [ ] O Thiago revisa e ajusta `docs/processo-de-trabalho.md` para refletir como ele realmente trabalha.
 - [x] O Thiago revisou e aceitou os ADRs que estavam **Propostos** (0003, 0004, 0005, 0007, 0009, 0010, 0011, 0014).
-- [ ] O Thiago revisa o ADR **0015** (orçamento), ainda **Proposto**, e muda o status para **Aceito** ou revoga com um ADR novo.
+- [x] O Thiago aceitou o ADR **0015** (orçamento) em 2026-10-14.
 - [x] Histórico do git conferido: nenhum extrato, nome de terceiro, CPF ou arquivo de banco em nenhum commit (ver P13 sobre o e-mail dos commits).
-- [ ] O Thiago decide o P13 (e-mail dos commits).
-- [ ] O Thiago responde P20 e P21 e revisa o ADR **0024** (hospedagem com login), **Proposto**. Enquanto isso, o app continua só local, em `127.0.0.1`.
+- [x] P13: decidido em 2026-10-14 pela recomendação; commits novos usam o e-mail `noreply` do GitHub (histórico não reescrito).
+- [x] Hospedagem: o Thiago escolheu **Supabase + Cloudflare Pages**, como o Lifetrailer, e casas separadas ([ADR 0025](adr/0025-supabase-como-backend-hospedado.md), que substitui o 0024). Etapas 1 a 6 abertas, um PR cada; a migração do banco real é feita por ele. Até a virada, o app continua local, em `127.0.0.1`.
 - [x] O Thiago aceitou o ADR **0021** (interface em React + Tailwind) em 2026-10-14.

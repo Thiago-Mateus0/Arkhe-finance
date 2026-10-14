@@ -1,9 +1,9 @@
 # ADR 0024 — Hospedagem com login para uso por duas pessoas
 
-- **Status:** Proposto
+- **Status:** Substituído pelo [ADR 0025](0025-supabase-como-backend-hospedado.md) (o Thiago escolheu Supabase). Os requisitos de segurança abaixo continuam valendo
 - **Data:** 2026-10-14
 - **Fase:** 6 — Automático e compartilhado
-- **Decidido por:** Thiago pediu "hospedar de verdade, com login (fase 6)"; as opções, a recomendação e as perguntas abertas são de Claude e **aguardam o Thiago**. Nada de código antes do aceite
+- **Decidido por:** Thiago pediu "hospedar de verdade, com login (fase 6)"; respondeu P20 (**casas separadas**) e preferiu o Supabase às opções A, B e C abaixo. As opções ficam como registro do que foi comparado
 - **Completa:** [ADR 0008](0008-household-id-desde-o-inicio.md) ("autenticação só entra quando houver compartilhamento")
 
 ## Contexto
@@ -44,11 +44,7 @@ Isso traz riscos que hoje não existem:
 
 ## Recomendação
 
-**Opção A com L1.** Rodar num único contêiner, acessível **só pela rede privada**, com a identidade vinda da própria VPN. Sem porta pública na internet. É o menor passo que atende "duas pessoas, de qualquer lugar, com login" sem tornar o dinheiro de ninguém alcançável por quem não foi convidado.
-
-Se um dia for preciso estar no ar sem o computador de casa, a mesma imagem sobe numa VPS (**B**) ainda atrás da rede privada ou de um proxy de acesso (**L1**). Exposição pública direta com login próprio (**L2**) fica por último e só com decisão sua.
-
-Para "mesma casa" ou "casas separadas" a recomendação depende da pergunta 1; o desenho abaixo serve aos dois.
+**Não foi esta a escolha final.** O Thiago optou por Supabase (ver ADR 0025). A recomendação original era a opção A com L1; a opção B com L1 era a alternativa que mantinha o código atual.
 
 ## Requisitos de segurança (valem em qualquer opção)
 
