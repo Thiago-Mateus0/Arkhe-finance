@@ -19,7 +19,14 @@ Só depois da migração aplicada. Isto é feito por você, no seu computador; a
 3. Instale o driver uma vez: `.venv/bin/pip install -e ".[nuvem]"`.
 4. Importe: `.venv/bin/python -m financas nuvem import samples/extrato.csv samples/fatura.csv`. Reimportar não muda nada.
 
-O app local (SQLite) continua como está; a virada para a nuvem é a etapa 5.
+## Levar o seu banco local para a nuvem (etapa 5)
+
+Leva lançamentos, regras, nomes próprios, orçamentos e categorias travadas do SQLite local para a nuvem, **sem reclassificar**. Só lê o banco local e confere os totais (por conta, tipo e categoria) antes de gravar; se não baterem, nada é gravado. Rodar de novo não duplica.
+
+1. Teste antes, sem gravar nada: `.venv/bin/python -m financas nuvem migrar --simular`
+2. Se mostrar "conferido", rode de verdade: `.venv/bin/python -m financas nuvem migrar`
+
+Seus dados reais passam a existir no Supabase depois do passo 2 (decisão do ADR 0025). O banco local não é alterado.
 
 ## Testes
 
