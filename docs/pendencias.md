@@ -35,7 +35,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P12 | Orçamento: limite diferente por mês (sazonalidade)? Aviso fora da tela (notificação)? | Fase 4 | Só se o uso mostrar necessidade |
 | P3 | ~~Pix no crédito contado duas vezes~~ — resolvido: para o dono é transferência (ADR 0017); para terceiro conta uma vez, pela fatura (ADR 0018) | — | Feito. Atenção: depende da fatura estar importada |
 | P4 | Categorias criadas pelo usuário não têm cor própria (só 8 têm). Como atribuir cor a categorias livres? | Fase 4 | Atribuir da paleta, por ordem de criação, e guardar |
-| P5 | Detectar assinaturas (cobrança que se repete todo mês) | Fase 4 | Só depois de ter 3+ meses importados |
+| P5 | ~~Detectar assinaturas~~ — decidido: assinatura é a categoria "Assinaturas", marcada por regra (ADR 0019); sem detecção automática | — | Feito. Sugestão automática (3+ meses, valor parecido) fica como ideia futura, só se o uso pedir |
 | P6 | ~~Tela para editar e apagar regras~~ — feita: *Regras de categoria*, dentro de Atividades | — | Feito |
 | P7 | Saldo das contas: lembrete mensal para o dono informar? | Fase 5 | Aviso na tela Início, no dia 1 |
 | P8 | Open Finance: qual agregador e qual o custo real? | Fase 6 | Pesquisar só quando chegar a fase 6 |
