@@ -229,3 +229,36 @@ def test_importar_pela_api_e_pela_cli_fazem_backup_antes(tmp_path, monkeypatch, 
         os.utime(p, (0, 0))
     assert cli.main(["import", str(arquivo)]) == 0
     assert "Backup automático antes de importar" in capsys.readouterr().out
+
+
+# ---- erros de gravação viram mensagem, nunca traceback ----
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root ignora permissão de pasta")
+def test_pasta_sem_permissao_explica_o_que_conferir(banco, tmp_path):
+    bloqueada = tmp_path / "disco"
+    bloqueada.mkdir()
+    bloqueada.chmod(0o500)  # como /media/usuario sem o disco espetado
+    try:
+        with pytest.raises(backup.ErroBackup, match="Sem permissão.*ls /media"):
+            backup.fazer(banco, bloqueada / "financas")
+    finally:
+        bloqueada.chmod(0o700)
+
+
+@pytest.mark.skipif(os.geteuid() == 0, reason="root ignora permissão de pasta")
+def test_cli_com_destino_invalido_sai_com_erro_amigavel(banco, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(db, "DEFAULT_PATH", banco)
+    bloqueada = tmp_path / "disco"
+    bloqueada.mkdir()
+    bloqueada.chmod(0o500)
+    try:
+        assert cli.main(["backup", "--dir", str(bloqueada / "x")]) == 1
+    finally:
+        bloqueada.chmod(0o700)
+    saida = capsys.readouterr().out
+    assert "ERRO — Sem permissão" in saida and "Traceback" not in saida
+
+
+def test_erro_de_espaco_em_disco_tem_mensagem_propria(tmp_path):
+    e = OSError(28, "No space left on device")
+    assert "Sem espaço" in str(backup._erro_de_gravacao(e, tmp_path))
