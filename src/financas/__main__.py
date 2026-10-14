@@ -4,7 +4,10 @@
   python -m financas pluggy                           # sincroniza com o Meu Pluggy (credenciais no .env)
   python -m financas pluggy --simular                 # idem, numa cópia do banco, sem gravar
   python -m financas backup [--dir PASTA] [--manter N]   # cópia conferida do banco (padrão: backups/, 30 cópias)
-  python -m financas restaurar ARQUIVO [--sim]        # volta o banco para um backup (guarda o atual antes)"""
+  python -m financas backup --criptografar [--dir PASTA] # idem, com senha (.db.gpg): para pasta na nuvem
+  python -m financas restaurar ARQUIVO [--sim]        # volta o banco para um backup (aceita .db.gpg)"""
+import getpass
+import os
 import re
 import sys
 from decimal import Decimal, InvalidOperation
@@ -70,11 +73,34 @@ def _aviso_dado_real() -> None:
           "copie para um disco externo ou uma pasta sincronizada só sua.")
 
 
+def _ler_senha(confirmar: bool) -> str:
+    """Senha digitada (sem aparecer na tela) ou, para agendar, de um arquivo só seu."""
+    caminho = os.environ.get("FINANCAS_BACKUP_SENHA_ARQUIVO")
+    if caminho:
+        p = Path(caminho).expanduser()
+        try:
+            if p.stat().st_mode & 0o077:
+                raise backup.ErroBackup(f"O arquivo de senha {p} está legível por outras pessoas. Rode: chmod 600 {p}")
+            return p.read_text(encoding="utf-8").strip()
+        except OSError as e:
+            raise backup.ErroBackup(f"Não consegui ler o arquivo de senha {p}: {e.strerror}") from e
+    if not sys.stdin.isatty():
+        raise backup.ErroBackup("Sem terminal para pedir a senha. Para agendar, aponte FINANCAS_BACKUP_SENHA_ARQUIVO.")
+    senha = getpass.getpass("Senha do backup: ")
+    if confirmar:
+        backup.validar_senha(senha)
+        if getpass.getpass("Repita a senha: ") != senha:
+            raise backup.ErroBackup("As senhas não são iguais. Nada foi feito.")
+    return senha
+
+
 def _backup(args: list[str]) -> int:
-    pasta, manter, i = None, backup.MANTER_PADRAO, 0
+    pasta, manter, i, cripto = None, backup.MANTER_PADRAO, 0, False
     try:
         while i < len(args):
-            if args[i] == "--dir" and i + 1 < len(args):
+            if args[i] == "--criptografar":
+                cripto = True; i += 1
+            elif args[i] == "--dir" and i + 1 < len(args):
                 pasta = Path(args[i + 1]); i += 2
             elif args[i] == "--manter" and i + 1 < len(args):
                 manter = int(args[i + 1]); i += 2
@@ -84,18 +110,29 @@ def _backup(args: list[str]) -> int:
     except ValueError:
         print("ERRO — --manter precisa de um número inteiro (0 guarda todas)")
         return 1
+    destino = pasta or backup.pasta_padrao(db.DEFAULT_PATH)
     try:
-        r = backup.fazer(db.DEFAULT_PATH, pasta or backup.pasta_padrao(db.DEFAULT_PATH), manter=manter)
+        if cripto:
+            if not backup.gpg_disponivel():
+                raise backup.ErroBackup("Para criptografar é preciso o gpg. Instale com: sudo apt install gnupg")
+            r = backup.fazer_criptografado(db.DEFAULT_PATH, destino, _ler_senha(confirmar=True), manter=manter)
+        else:
+            r = backup.fazer(db.DEFAULT_PATH, destino, manter=manter)
     except backup.ErroBackup as e:
         print(f"ERRO — {e}")
         return 1
     t = r["tabelas"]
-    print(f"Backup: {r['arquivo']} ({r['bytes'] / 1024:.0f} KB)")
+    print(f"Backup{' criptografado' if cripto else ''}: {r['arquivo']} ({r['bytes'] / 1024:.0f} KB)")
     print(f"Conferido: integridade ok; {t.get('transactions', 0)} lançamentos, {t.get('rules', 0)} regras, "
           f"{t.get('budgets', 0)} orçamentos")
     if r["removidos"]:
         print(f"Removidas {len(r['removidos'])} cópias antigas (mantidas as {manter} mais novas)")
-    _aviso_dado_real()
+    if cripto:
+        print("Conferido também: o arquivo abre com a sua senha e dá o mesmo conteúdo.")
+        print("Guarde a senha num gerenciador de senhas: sem ela o arquivo não abre, nem por este app.")
+        print("Para guardar na nuvem, copie só o arquivo .db.gpg para a pasta sincronizada.")
+    else:
+        _aviso_dado_real()
     return 0
 
 
@@ -105,7 +142,11 @@ def _restaurar(args: list[str]) -> int:
         print(__doc__)
         return 2
     try:
-        r = backup.restaurar(Path(arquivos[0]), db.DEFAULT_PATH, substituir="--sim" in args)
+        if arquivos[0].endswith(".gpg"):
+            r = backup.restaurar_criptografado(Path(arquivos[0]), db.DEFAULT_PATH, _ler_senha(confirmar=False),
+                                               substituir="--sim" in args)
+        else:
+            r = backup.restaurar(Path(arquivos[0]), db.DEFAULT_PATH, substituir="--sim" in args)
     except backup.ErroBackup as e:
         print(f"ERRO — {e}")
         return 1

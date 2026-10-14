@@ -21,6 +21,12 @@ if [ "${1:-}" = "import" ]; then shift; exec python -m financas import "$@"; fi
 if [ "${1:-}" = "backup" ]; then shift; exec python -m financas backup "$@"; fi
 if [ "${1:-}" = "restaurar" ]; then shift; exec python -m financas restaurar "$@"; fi
 if [ "${1:-}" = "pluggy" ]; then shift; exec python -m financas pluggy "$@"; fi
+# Comando desconhecido nunca sobe o servidor sem avisar (ex.: versão antiga do script sem "backup").
+if [ -n "${1:-}" ] && [ "$1" != "demo" ]; then
+  echo "comando desconhecido: $1" >&2
+  echo "uso: ./run.sh [demo | import ARQ... | backup [--dir PASTA] [--criptografar] | restaurar ARQ [--sim] | pluggy [--simular]]" >&2
+  exit 2
+fi
 # Front (ADR 0021): constrói web/dist se faltar ou estiver velho.
 if command -v npm >/dev/null 2>&1 && [ -f web/package.json ]; then
   if [ ! -f web/dist/index.html ] || [ -n "$(find web/src web/index.html web/package.json -newer web/dist/index.html -print -quit)" ]; then
