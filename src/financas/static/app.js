@@ -40,6 +40,7 @@ const KIND = {
   expense: "Gasto", income: "Receita", transfer: "Transferência entre contas suas (não conta como gasto)",
   card_payment: "Pagamento de fatura (o gasto está na fatura)", credit_funding: "Pix no crédito (o gasto é o Pix de saída)",
   passthrough: "Repasse: entrou e saiu o mesmo valor (não conta)",
+  investment: "Investimento: aplicação ou resgate, dinheiro seu mudando de lugar (não conta)",
 };
 
 /* ---------- ícones (traço simples) ---------- */
@@ -279,7 +280,7 @@ async function viewActivity() {
   const params = state.category ? { ...base, kinds: "expense,income", category: state.category }
     : f === "in" ? { ...base, kind: "income" } : f === "out" ? { ...base, kind: "expense" }
     : f === "uncat" ? { ...base, kind: "expense", category: "Sem categoria" }
-    : f === "hidden" ? { ...base, kinds: "passthrough,transfer,card_payment,credit_funding" }
+    : f === "hidden" ? { ...base, kinds: "passthrough,transfer,card_payment,credit_funding,investment" }
     : { ...base, kinds: "income,expense" };
   let list = await api(`/transactions?${qs(params)}`);
   if (f === "card") list = list.filter((t) => t.account === "nubank_fatura");
