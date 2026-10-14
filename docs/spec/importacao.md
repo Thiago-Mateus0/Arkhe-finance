@@ -33,3 +33,17 @@ Toda importação reclassifica as linhas da conta (ver `classificacao.md`), porq
 ## Pontos de entrada
 
 `POST /import` (um arquivo por chamada) · `python -m financas import arq1.csv arq2.csv` · tela **Importar** (vários arquivos, arrastar e soltar).
+
+## Meu Pluggy (fonte automática)
+
+`python -m financas pluggy` (ou `./run.sh pluggy`) lê conta e cartão pela API do Meu Pluggy e grava pelo mesmo caminho do CSV (ADRs 0020 e 0022). Credenciais em `.env` ou variáveis de ambiente: `PLUGGY_CLIENT_ID`, `PLUGGY_CLIENT_SECRET`, `PLUGGY_ITEM_ID`. O `.env` é ignorado pelo git; há um `.env.example` sem valores.
+
+- **Só lançamento `POSTED`.** Pendente é contado à parte e não entra.
+- **Direção pelo `type`** (`DEBIT` sai, `CREDIT` entra), nunca pelo sinal do valor: no cartão o sinal vem invertido.
+- **Cartão:** a data é a de lançamento na fatura (`billPostDate`), igual ao CSV. Parcela vira o sufixo "- Parcela n/m" no texto, que o resto do app já lê.
+- **Pagamento de fatura** (`PAGAMENTO_FATURA`) é `card_payment`.
+- **Sem contar em dobro com o CSV, nos dois sentidos:** uma linha de outra origem, mesma conta, mesmo valor com sinal e data até 1 dia de diferença, é o mesmo lançamento. Vale um para um, e a data exata tem preferência. Reimportar qualquer fonte não muda nada.
+- **Linha malformada** (data, valor ou tipo inválido) é ignorada e contada, sem quebrar a sincronização.
+- A resposta informa lidas, novas, já existentes, pendentes e ignoradas.
+- Fora de escopo por enquanto (P19): pareamento de Pix no crédito entre conta e fatura para linhas do Pluggy, que não trazem o identificador comum do CSV.
+

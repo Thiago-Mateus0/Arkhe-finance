@@ -1,9 +1,9 @@
-# ADR 0021 — Casar os lançamentos do Pluggy com os do CSV
+# ADR 0022 — Casar os lançamentos do Pluggy com os do CSV
 
-- **Status:** Proposto — aguarda decisão do Thiago
+- **Status:** Aceito
 - **Data:** 2026-10-14
 - **Fase:** 6a — Fonte automática
-- **Decidido por:** Claude propôs, com base em contagens feitas por script nos dados do Thiago (nenhum valor entra no repositório)
+- **Decidido por:** Thiago aceitou a proposta, com P17 pelo mês da fatura. A proposta veio de contagens feitas por script nos dados dele (nenhum valor entra no repositório)
 
 ## Contexto
 
@@ -14,12 +14,12 @@ O ADR 0020 aceitou o Meu Pluggy como fonte automática. O CSV continua suportado
 - **Direção:** na conta, o sinal do valor acompanha `type`; no cartão o sinal vem **invertido**. A direção deve vir sempre de `type` (`DEBIT` ou `CREDIT`), nunca do sinal.
 - **Pendentes:** compras de cartão `PENDING` mudam depois de faturadas.
 
-## Decisão proposta
+## Decisão
 
 1. **Chave de casamento:** mesma conta, valor absoluto igual e data até 1 dia de diferença, consumindo um a um. Vale nos dois sentidos (importar Pluggy depois do CSV e CSV depois do Pluggy). Se casar, não duplica.
 2. **Direção** pelo `type` do Pluggy.
 3. **Só `POSTED`.** Pendente não entra.
-4. **Cartão: data = `billPostDate`**, igual ao CSV, para o histórico não mudar. A data da compra (`purchaseDate`) fica guardada para uso futuro. *Alternativa:* passar a usar a data da compra, o que muda os totais de meses já fechados e exige decisão do Thiago.
+4. **Cartão: data = `billPostDate`**, igual ao CSV, para o histórico não mudar (P17, decidido). Usar a data da compra (`purchaseDate`) mudaria os totais de meses já fechados e fica para uma decisão futura.
 5. **Parcelas** vêm de `installmentNumber` e `totalInstallments`.
 6. **Tipos:** `PAGAMENTO_FATURA` do cartão é `card_payment`, como no CSV.
 

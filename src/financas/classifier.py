@@ -26,8 +26,9 @@ def _pix_no_credito_para(description: str, own_names: set[str]) -> bool:
     return _nome_pix_no_credito(description) in own_names
 
 
-def classify_fatura(description: str, amount_cents: int, own_names: set[str] = frozenset()) -> str:
-    if description.lower().startswith("pagamento recebido"):
+def classify_fatura(description: str, amount_cents: int, own_names: set[str] = frozenset(),
+                    operation_type: str | None = None) -> str:
+    if description.lower().startswith("pagamento recebido") or operation_type == "PAGAMENTO_FATURA":
         return CARD_PAYMENT
     if _pix_no_credito_para(description, own_names):
         return TRANSFER  # o dinheiro só mudou de bolso; o gasto real é quando ele for usado
