@@ -29,6 +29,17 @@ class ErroBackup(Exception):
     """Mensagem pensada para o dono: diz o que houve e o que fazer."""
 
 
+def _erro_de_gravacao(e: OSError, pasta: Path) -> ErroBackup:
+    """Traduz falha de disco/permissão em mensagem que diz o que conferir (sem traceback)."""
+    if isinstance(e, PermissionError):
+        return ErroBackup(
+            f"Sem permissão para gravar em {pasta}. Confira o caminho: se for um disco externo, ele precisa estar "
+            "espetado e aberto (veja o nome real com `ls /media/$USER`); a pasta tem que ser sua.")
+    if getattr(e, "errno", None) == 28:  # ENOSPC
+        return ErroBackup(f"Sem espaço em {pasta}. Libere espaço ou escolha outro destino com --dir.")
+    return ErroBackup(f"Não consegui gravar o backup em {pasta}: {e.strerror or type(e).__name__}.")
+
+
 def pasta_padrao(banco: Path) -> Path:
     return Path(os.environ.get("FINANCAS_BACKUP_DIR") or banco.resolve().parent / "backups")
 
@@ -78,7 +89,10 @@ def fazer(origem: Path, pasta: Path, manter: int | None = MANTER_PADRAO,
     if not origem.is_file():
         raise ErroBackup(f"Não achei o banco em {origem}. Rode o comando na pasta do app ou aponte FINANCAS_DB.")
     pasta = Path(pasta)
-    pasta.mkdir(parents=True, exist_ok=True)
+    try:
+        pasta.mkdir(parents=True, exist_ok=True)
+    except OSError as e:
+        raise _erro_de_gravacao(e, pasta) from e
 
     carimbo = (agora or datetime.now()).strftime("%Y%m%d-%H%M%S")
     sufixo = f"-{etiqueta}" if etiqueta else ""
@@ -92,6 +106,8 @@ def fazer(origem: Path, pasta: Path, manter: int | None = MANTER_PADRAO,
         _copiar(origem, parcial)
         contagens = _conferir(parcial)
         os.replace(parcial, final)
+    except OSError as e:
+        raise _erro_de_gravacao(e, pasta) from e
     finally:
         parcial.unlink(missing_ok=True)
 
@@ -126,6 +142,8 @@ def restaurar(arquivo: Path, destino: Path, substituir: bool = False, agora: dat
         _copiar(arquivo, parcial)
         _conferir(parcial)
         os.replace(parcial, destino)
+    except OSError as e:
+        raise _erro_de_gravacao(e, destino.parent) from e
     finally:
         parcial.unlink(missing_ok=True)
     return {"destino": destino, "tabelas": contagens, "copia_de_seguranca": copia_de_seguranca}
