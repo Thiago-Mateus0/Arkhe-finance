@@ -20,4 +20,4 @@ where = ["src"]
 testpaths = ["tests"]
 
 [tool.setuptools.package-data]
-financas = ["default_rules.json", "static/*"]
+financas = ["default_rules.json"]

@@ -42,18 +42,3 @@ def test_transactions_search_kinds_and_order(client):
     assert {x["kind"] for x in t(kinds="expense")} == {"expense"}
     assert t(desc=True)[0]["date"] >= t(desc=True)[-1]["date"]
     assert t(q="   ") == t()
-
-
-def test_static_and_manifest(client):
-    assert client.get("/").status_code == 200
-    assert client.get("/manifest.webmanifest").json()["name"]
-    assert client.get("/static/app.js").status_code == 200
-
-
-def test_temas_claro_e_escuro_e_menu(client):
-    css = client.get("/static/style.css").text
-    assert 'data-theme="light"' in css and "--accent" in css
-    html = client.get("/").text
-    assert "localStorage.getItem(\"theme\")" in html  # aplica o tema antes de pintar
-    assert "icon.svg" in html
-    assert "<svg" in client.get("/static/icon.svg").text

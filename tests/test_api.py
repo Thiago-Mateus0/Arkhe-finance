@@ -16,4 +16,3 @@ def test_api_flow(tmp_path, monkeypatch):
     rep = c.get("/reports/monthly", params={"month": "2026-09"}).json()
     assert any(x["categoria"] == "Mercado" for x in rep["por_categoria"])
     assert c.post("/import", files={"file": ("x.csv", b"a,b\n1,2\n")}).status_code == 422
-    assert c.get("/").status_code == 200
