@@ -4,8 +4,7 @@ from pathlib import Path
 from decimal import Decimal
 
 from fastapi import Depends, FastAPI, HTTPException, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from . import assinaturas, db, parcelas, service
@@ -192,37 +191,36 @@ def transactions(month: str, category: str | None = None, kind: str | None = Non
     return [dict(r) for r in conn.execute(f"{sql} ORDER BY date {order}, id {order}", args)]
 
 
-STATIC = Path(__file__).parent / "static"
-app.mount("/static", StaticFiles(directory=STATIC), name="static")
-
-
-@app.get("/", response_class=HTMLResponse)
-def index():
-    return (STATIC / "index.html").read_text(encoding="utf-8")
-
-
-# Front novo (ADR 0021): construído por `npm run build` em web/. Durante a migração fica em /novo;
-# o app antigo segue em /. Lido a cada pedido para o `./run.sh` poder construir depois de subir.
+# Front (ADR 0021): construído por `npm run build` em web/ e servido daqui. Lido a cada pedido,
+# para o `./run.sh` poder construir depois de subir. Nunca sai da pasta do build.
 WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
 
 
-@app.get("/novo")
-@app.get("/novo/{caminho:path}")
-def front_novo(caminho: str = ""):
+def _do_build(relativo: str) -> FileResponse:
     raiz = WEB_DIST.resolve()
-    index = raiz / "index.html"
-    if not index.is_file():
-        raise HTTPException(404, "O front novo ainda não foi construído: rode ./run.sh (precisa de Node)")
-    if not caminho:
-        return FileResponse(index)
-    alvo = (raiz / caminho).resolve()
-    if alvo.is_file() and alvo.is_relative_to(raiz):
-        return FileResponse(alvo)
-    if Path(caminho).suffix:  # arquivo que não existe: 404 de verdade, não a página
+    if not (raiz / "index.html").is_file():
+        raise HTTPException(404, "O front ainda não foi construído: rode ./run.sh (precisa de Node)")
+    alvo = (raiz / relativo).resolve()
+    if not alvo.is_file() or not alvo.is_relative_to(raiz):
         raise HTTPException(404, "Arquivo não encontrado")
-    return FileResponse(index)
+    return FileResponse(alvo)
+
+
+@app.get("/")
+def index():
+    return _do_build("index.html")
+
+
+@app.get("/assets/{caminho:path}")
+def assets(caminho: str):
+    return _do_build(f"assets/{caminho}")
 
 
 @app.get("/manifest.webmanifest")
 def manifest():
-    return FileResponse(STATIC / "manifest.webmanifest", media_type="application/manifest+json")
+    return _do_build("manifest.webmanifest")
+
+
+@app.get("/icon.svg")
+def icone():
+    return _do_build("icon.svg")

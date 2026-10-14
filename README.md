@@ -8,7 +8,7 @@ Nasceu de uma necessidade pessoal: ter visão do próprio dinheiro a partir do q
 
 ## Telas
 
-Capturas com os dados fictícios de `data/demo/`, geradas por `scripts/capturas.py`. A interface é **inspirada em apps de finanças modernos** (cartões, gráfico acumulado, lista por dia); a identidade visual — cor, marca e navegação — é própria. O tema escuro é o padrão e o **claro é opcional** (botão no topo).
+Capturas com os dados fictícios de `data/demo/`, geradas por `scripts/capturas.py`. A interface é **inspirada em apps de finanças modernos** (cartões, gráfico acumulado, lista por dia); a identidade visual — cor de destaque, marca e nome — é própria. O tema escuro é o padrão e o **claro é opcional** (botão no topo).
 
 **Celular, tema escuro** (390×844)
 
@@ -81,7 +81,7 @@ O app classifica cada lançamento em um tipo e só conta como gasto o que é gas
 - **Assinaturas:** a categoria que o dono define por regra; o app mostra o que foi cobrado no mês e a próxima cobrança estimada.
 - **Pix no crédito conta uma vez:** para o próprio dono é transferência; para terceiro vale a linha da fatura, que traz o custo do crédito.
 - **Regras editáveis na tela**, com recategorização imediata e sem tocar no que foi categorizado à mão.
-- **Interface:** em migração para React + Tailwind (ADR 0021), tela a tela; gráficos em SVG escritos à mão. Enquanto a migração não termina, as telas ainda não migradas seguem em HTML, CSS e JS puros.
+- **Interface:** React + TypeScript + Tailwind (ADR 0021), mobile-first e instalável; gráficos em SVG escritos à mão; tema escuro e claro.
 
 ## Decisões de engenharia que valem uma olhada
 
@@ -124,13 +124,13 @@ export FINANCAS_OWN_NAMES="SEU NOME COMPLETO"      # suas outras contas (viram t
 ./run.sh import extrato.csv fatura.csv             # ou use o botão + na tela
 ```
 
-No celular, abra o endereço no navegador e use "Adicionar à tela inicial". Por enquanto a API **não tem login** e não deve ser exposta na internet (ADR 0008).
+O `./run.sh` constrói o front sozinho na primeira vez (precisa de **Node 20+**). O app escuta só em `127.0.0.1`: para abrir no celular é preciso expor a porta na rede local, e a API **não tem login** e não deve ser exposta na internet (ADR 0008).
 
 ## Estrutura
 
 ```
-src/financas/     importer · classifier · rules · service · parcelas · assinaturas · api · static/ (front antigo)
-web/              front novo em React (migração em andamento, ADR 0021)
+src/financas/     importer · classifier · rules · service · parcelas · assinaturas · api
+web/              front em React (ADR 0021); `npm run build` gera web/dist
 docs/spec/        o que o sistema faz, por área
 docs/adr/         por que cada decisão foi tomada
 docs/pendencias.md  fases e o que falta decidir
