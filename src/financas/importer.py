@@ -16,6 +16,8 @@ class ParsedRow:
     description: str
     counterparty: str
     dedupe_key: str
+    external_id: str = ""  # id na fonte externa (Pluggy); vazio no CSV
+    operation_type: str = ""
 
 
 _PIX = re.compile(

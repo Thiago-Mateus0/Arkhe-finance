@@ -1,7 +1,7 @@
 import json
 import os
 import sqlite3
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from . import classifier, rules
@@ -22,24 +22,53 @@ def get_own_names(conn: sqlite3.Connection) -> set[str]:
     return from_db | from_env
 
 
+def _duplicata_de_outra_origem(conn: sqlite3.Connection, account: str, p, source: str, tomadas: set[int]) -> int | None:
+    """Mesmo valor (com sinal) e data até 1 dia de diferença numa linha de OUTRA origem ainda não
+    consumida nesta rodada: é o mesmo lançamento vindo por CSV e por Pluggy (ADR 0022). Exata primeiro."""
+    d = date.fromisoformat(p.date)
+    cand = conn.execute(
+        "SELECT id, date FROM transactions WHERE household_id=? AND account=? AND source<>? AND amount_cents=?"
+        " AND date BETWEEN ? AND ?",
+        (HOUSEHOLD, account, source, p.amount_cents, (d - timedelta(days=1)).isoformat(),
+         (d + timedelta(days=1)).isoformat())).fetchall()
+    cand = [c for c in cand if c["id"] not in tomadas]
+    if not cand:
+        return None
+    return min(cand, key=lambda c: (abs((date.fromisoformat(c["date"]) - d).days), c["id"]))["id"]
+
+
+def gravar_linhas(conn: sqlite3.Connection, account: str, parsed: list, source: str) -> int:
+    """Grava linhas já lidas (CSV ou Pluggy). Idempotente e sem contar em dobro entre as duas origens.
+    Devolve quantas são novas; não reclassifica (quem chama decide)."""
+    rs, own = get_rules(conn), get_own_names(conn)
+    inserted, tomadas = 0, set()
+    for p in sorted(parsed, key=lambda r: r.date):
+        if conn.execute("SELECT 1 FROM transactions WHERE household_id=? AND dedupe_key=?",
+                        (HOUSEHOLD, p.dedupe_key)).fetchone():
+            continue
+        outro = _duplicata_de_outra_origem(conn, account, p, source, tomadas)
+        if outro is not None:
+            tomadas.add(outro)
+            continue
+        kind = (classifier.classify_fatura(p.description, p.amount_cents, own, p.operation_type or None)
+                if account == "nubank_fatura" else EXPENSE)  # reclassify() define o tipo final da conta
+        conn.execute(
+            "INSERT INTO transactions (household_id, account, source_id, date, amount_cents, description,"
+            " counterparty, kind, category, dedupe_key, source, external_id, operation_type)"
+            " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (HOUSEHOLD, account, p.source_id, p.date, p.amount_cents, p.description, p.counterparty, kind,
+             rules.pick_category(p.description, p.counterparty, rs), p.dedupe_key, source,
+             p.external_id or None, p.operation_type or None))
+        inserted += 1
+    conn.commit()
+    return inserted
+
+
 def import_csv(conn: sqlite3.Connection, content: str | bytes) -> dict:
     text = content.decode("utf-8-sig") if isinstance(content, bytes) else content
     fmt = detect_format(text)
     parsed = parse_nubank_conta(text) if fmt == "nubank_conta" else parse_nubank_fatura(text)
-    rs = get_rules(conn)
-    own = get_own_names(conn)
-    inserted = 0
-    for p in parsed:
-        kind = (classifier.classify_fatura(p.description, p.amount_cents, own) if fmt == "nubank_fatura"
-                else EXPENSE)  # reclassify() define o tipo final das linhas de conta
-        cur = conn.execute(
-            "INSERT OR IGNORE INTO transactions (household_id, account, source_id, date, amount_cents,"
-            " description, counterparty, kind, category, dedupe_key) VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (HOUSEHOLD, fmt, p.source_id, p.date, p.amount_cents, p.description, p.counterparty, kind,
-             rules.pick_category(p.description, p.counterparty, rs), p.dedupe_key),
-        )
-        inserted += cur.rowcount
-    conn.commit()
+    inserted = gravar_linhas(conn, fmt, parsed, "csv")
     reclassify(conn)
     return {"formato": fmt, "lidas": len(parsed), "novas": inserted, "duplicadas": len(parsed) - inserted}
 
@@ -49,15 +78,17 @@ def reclassify(conn: sqlite3.Connection) -> None:
     dependem do conjunto todo (conta e fatura juntas), por isso rodam sempre sobre tudo."""
     own = get_own_names(conn)
     rows = [dict(r) for r in conn.execute(
-        "SELECT id, date, source_id, amount_cents, description, counterparty FROM transactions"
+        "SELECT id, date, source_id, amount_cents, description, counterparty, operation_type FROM transactions"
         " WHERE household_id=? AND account='nubank_conta'", (HOUSEHOLD,))]
     for r in rows:
-        r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own)
+        r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own,
+                                        r["operation_type"])
     faturas = [dict(r) for r in conn.execute(
-        "SELECT id, date, description, amount_cents FROM transactions WHERE household_id=? AND account='nubank_fatura'",
+        "SELECT id, date, description, amount_cents, operation_type FROM transactions"
+        " WHERE household_id=? AND account='nubank_fatura'",
         (HOUSEHOLD,))]
     for r in faturas:
-        r["kind"] = classifier.classify_fatura(r["description"], r["amount_cents"], own)
+        r["kind"] = classifier.classify_fatura(r["description"], r["amount_cents"], own, r["operation_type"])
     classifier.pair_pix_no_credito(rows, faturas)
     classifier.mark_passthrough(rows)
     conn.executemany("UPDATE transactions SET kind=? WHERE id=?", [(r["kind"], r["id"]) for r in rows + faturas])

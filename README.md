@@ -2,7 +2,7 @@
 
 App pessoal de finanças. Importa o **CSV de conta e de fatura do Nubank**, separa o que é gasto do que é só dinheiro passando pela conta, categoriza por regras e mostra, no celular, para onde o dinheiro está indo.
 
-Nasceu de uma necessidade pessoal: ter visão do próprio dinheiro a partir do que o banco já exporta, sem entregar acesso à conta a terceiros. Roda **local** (SQLite), sem servidor e sem enviar dado financeiro a ninguém.
+Nasceu de uma necessidade pessoal: ter visão do próprio dinheiro a partir do que o banco já exporta, sem entregar acesso à conta a terceiros. Roda **local** (SQLite), sem servidor e sem enviar dado financeiro a ninguém. **Opcional:** a sincronização com o Meu Pluggy (`./run.sh pluggy`) é a única parte que passa os dados por um terceiro, e só roda se você a configurar.
 
 > **Onde estamos:** uso real concluído e controle (orçamento, regras, parcelas, assinaturas) pronto; a próxima fase é patrimônio. Detalhes em [`docs/pendencias.md`](docs/pendencias.md).
 

@@ -1,6 +1,8 @@
 """Uso:
   python -m financas import extrato.csv fatura.csv ...
-  python -m financas orcamento "Delivery" 150,50      # limite mensal da categoria"""
+  python -m financas orcamento "Delivery" 150,50      # limite mensal da categoria
+  python -m financas pluggy                           # sincroniza com o Meu Pluggy (credenciais no .env)
+  python -m financas pluggy --simular                 # idem, numa cópia do banco, sem gravar"""
 import re
 import sys
 from decimal import Decimal, InvalidOperation
@@ -34,7 +36,33 @@ def _orcamento(categoria: str, valor: str) -> int:
     return 0
 
 
+def _pluggy(simular: bool = False) -> int:
+    from . import pluggy
+    try:
+        if simular:  # roda numa cópia descartável: mostra o resultado sem tocar no banco real
+            import shutil
+            import tempfile
+            with tempfile.TemporaryDirectory() as tmp:
+                copia = Path(tmp) / "simulacao.db"
+                if db.DEFAULT_PATH.exists():
+                    shutil.copy(db.DEFAULT_PATH, copia)
+                conn = db.connect(copia)
+                r = pluggy.sincronizar(conn)
+                conn.close()
+            print("SIMULAÇÃO (nada foi gravado no seu banco):")
+        else:
+            r = pluggy.sincronizar(db.connect())
+    except pluggy.ErroPluggy as e:
+        print(f"ERRO — {e}")
+        return 1
+    print(f"Pluggy: {r['lidas']} lidas — {r['novas']} novas, {r['duplicadas']} já existiam"
+          f" (CSV ou sincronização anterior); {r['pendentes']} pendentes e {r['ignoradas']} ignoradas")
+    return 0
+
+
 def main(argv: list[str]) -> int:
+    if argv and argv[0] == "pluggy" and set(argv[1:]) <= {"--simular"}:
+        return _pluggy(simular="--simular" in argv)
     if argv and argv[0] == "orcamento" and len(argv) == 3:
         return _orcamento(argv[1], argv[2])
     if len(argv) < 2 or argv[0] != "import":

@@ -34,7 +34,7 @@ export function Atividades() {
     else if (f === "in") p.set("kind", "income");
     else if (f === "out") p.set("kind", "expense");
     else if (f === "uncat") { p.set("kind", "expense"); p.set("category", SEM_CATEGORIA); }
-    else if (f === "hidden") p.set("kinds", "passthrough,transfer,card_payment,credit_funding");
+    else if (f === "hidden") p.set("kinds", "passthrough,transfer,card_payment,credit_funding,investment");
     else p.set("kinds", "income,expense");
     return `/transactions?${p}`;
   }, [mes, qAplicada, cat, f]);

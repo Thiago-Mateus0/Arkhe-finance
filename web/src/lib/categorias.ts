@@ -13,5 +13,6 @@ export const KIND: Record<string, string> = {
   card_payment: "Pagamento de fatura (o gasto está na fatura)",
   credit_funding: "Pix no crédito (o gasto é o Pix de saída)",
   passthrough: "Repasse: entrou e saiu o mesmo valor (não conta)",
+  investment: "Investimento: aplicação ou resgate, dinheiro seu mudando de lugar (não conta)",
 };
 export const contaComoValor = (kind: string): boolean => kind === "expense" || kind === "income";

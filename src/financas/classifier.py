@@ -9,8 +9,9 @@ TRANSFER = "transfer"  # entre contas próprias
 CARD_PAYMENT = "card_payment"  # pagamento de fatura (os gastos reais estão na fatura)
 CREDIT_FUNDING = "credit_funding"  # Pix no crédito: entrada fictícia, o gasto é o Pix de saída
 PASSTHROUGH = "passthrough"  # recebeu e repassou o mesmo valor no mesmo dia
+INVESTMENT = "investment"  # aplicação e resgate de investimento: dinheiro seu mudando de lugar
 
-EXCLUDED_FROM_SPENDING = {TRANSFER, CARD_PAYMENT, CREDIT_FUNDING, PASSTHROUGH, INCOME}
+EXCLUDED_FROM_SPENDING = {TRANSFER, CARD_PAYMENT, CREDIT_FUNDING, PASSTHROUGH, INVESTMENT, INCOME}
 
 
 _PIX_NO_CREDITO = re.compile(r"^pix no crédito - (?P<nome>.+?)(?: - \d+/\d+)?$", re.IGNORECASE)
@@ -26,20 +27,27 @@ def _pix_no_credito_para(description: str, own_names: set[str]) -> bool:
     return _nome_pix_no_credito(description) in own_names
 
 
-def classify_fatura(description: str, amount_cents: int, own_names: set[str] = frozenset()) -> str:
-    if description.lower().startswith("pagamento recebido"):
+def classify_fatura(description: str, amount_cents: int, own_names: set[str] = frozenset(),
+                    operation_type: str | None = None) -> str:
+    if description.lower().startswith("pagamento recebido") or operation_type == "PAGAMENTO_FATURA":
         return CARD_PAYMENT
     if _pix_no_credito_para(description, own_names):
         return TRANSFER  # o dinheiro só mudou de bolso; o gasto real é quando ele for usado
     return EXPENSE  # inclui estornos (valor positivo = reduz o gasto)
 
 
-def classify(description: str, amount_cents: int, counterparty: str, own_names: set[str]) -> str:
+_INVESTIMENTO = re.compile(r"^(aplicação|resgate)\b", re.IGNORECASE)  # só no começo: "Aplicativo" não casa
+
+
+def classify(description: str, amount_cents: int, counterparty: str, own_names: set[str],
+             operation_type: str | None = None) -> str:
     d = description.lower()
     if d.startswith("pagamento de fatura"):
         return CARD_PAYMENT
     if d.startswith("valor adicionado na conta por cartão de crédito"):
         return CREDIT_FUNDING
+    if operation_type == "RESGATE_APLIC_FINANCEIRA" or _INVESTIMENTO.match(description.strip()):
+        return INVESTMENT
     if counterparty and counterparty in own_names:
         return TRANSFER
     return INCOME if amount_cents > 0 else EXPENSE
