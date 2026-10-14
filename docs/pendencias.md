@@ -40,9 +40,9 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P6 | ~~Tela para editar e apagar regras~~ — feita: *Regras de categoria*, dentro de Atividades | — | Feito |
 | P7 | Saldo das contas: lembrete mensal para o dono informar? | Fase 5 | Aviso na tela Início, no dia 1 |
 | P8 | ~~Open Finance: qual agregador e custo?~~ — decidido: **Meu Pluggy** (gratuito para uso pessoal), como importador novo (ADR 0020) | — | Feito; implementação é a fase 6 |
-| P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Proposto no [ADR 0024](adr/0024-hospedagem-com-login.md): rede privada + identidade na borda, falhando fechado. **A API atual não pode ser exposta** (ADR 0008) |
-| P20 | Hospedagem: a outra pessoa vê **os mesmos lançamentos** (mesma casa) ou **só os dela** (casas separadas)? | ADR 0024 | Fato e decisão do Thiago; o modelo (`household_id`) aceita os dois |
-| P21 | Hospedagem: aceita **dado real num servidor de terceiro**, ou só em casa atrás de rede privada? E a outra pessoa concorda com os dados dela no sistema? | ADR 0024 | Recomendação: começar em casa, atrás de rede privada; servidor só se precisar estar no ar sem o computador |
+| P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Decidido no [ADR 0024](adr/0024-hospedagem-com-login.md): casas separadas, em casa atrás de rede privada, identidade na borda, falhando fechado. Implementação em 5 PRs. **A API atual não pode ser exposta** (ADR 0008) |
+| P20 | ~~Hospedagem: mesma casa ou casas separadas?~~ — decidido: **casas separadas**, cada pessoa só vê o que é seu (ADR 0024) | — | Feito; vira `household_id` por identidade e testes de isolamento |
+| P21 | ~~Dado real em servidor de terceiro?~~ — decidido pela recomendação: **não por enquanto**; roda em casa, atrás de rede privada (ADR 0024). O consentimento da outra pessoa é combinado pelo Thiago antes de entrar dado dela | — | Feito |
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
 | P14 | Meu Pluggy: com que frequência a conta do dono atualiza o Nubank (relatos dizem cerca de uma vez por dia), o conector traz conta **e** cartão, e qual o formato dos lançamentos? | Fase 6 | O Thiago cria a conta no Meu Pluggy, conecta o Nubank e confere na tela deles. Fato que só ele tem; **as credenciais nunca vão para o chat nem para o git** |
 | P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
@@ -60,5 +60,5 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 - [ ] O Thiago revisa o ADR **0015** (orçamento), ainda **Proposto**, e muda o status para **Aceito** ou revoga com um ADR novo.
 - [x] Histórico do git conferido: nenhum extrato, nome de terceiro, CPF ou arquivo de banco em nenhum commit (ver P13 sobre o e-mail dos commits).
 - [ ] O Thiago decide o P13 (e-mail dos commits).
-- [ ] O Thiago responde P20 e P21 e revisa o ADR **0024** (hospedagem com login), **Proposto**. Enquanto isso, o app continua só local, em `127.0.0.1`.
+- [x] O Thiago respondeu P20 (casas separadas) e P21 (em casa, rede privada) e o ADR **0024** foi aceito em 2026-10-14. Enquanto a etapa 1 não entra, o app continua só local, em `127.0.0.1`.
 - [x] O Thiago aceitou o ADR **0021** (interface em React + Tailwind) em 2026-10-14.

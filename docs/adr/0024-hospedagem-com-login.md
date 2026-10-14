@@ -1,9 +1,9 @@
 # ADR 0024 — Hospedagem com login para uso por duas pessoas
 
-- **Status:** Proposto
+- **Status:** Aceito
 - **Data:** 2026-10-14
 - **Fase:** 6 — Automático e compartilhado
-- **Decidido por:** Thiago pediu "hospedar de verdade, com login (fase 6)"; as opções, a recomendação e as perguntas abertas são de Claude e **aguardam o Thiago**. Nada de código antes do aceite
+- **Decidido por:** Thiago pediu "hospedar de verdade, com login (fase 6)", respondeu que **a outra pessoa não vê os mesmos lançamentos** (casas separadas) e delegou a escolha de onde hospedar à recomendação de Claude ("sua recomendação")
 - **Completa:** [ADR 0008](0008-household-id-desde-o-inicio.md) ("autenticação só entra quando houver compartilhamento")
 
 ## Contexto
@@ -18,11 +18,18 @@ Isso traz riscos que hoje não existem:
 - **Perda:** o banco é um arquivo SQLite. Sem backup testado, um disco perdido apaga tudo.
 - **Documentação aberta:** o FastAPI publica `/docs` e `/openapi.json` por padrão, o que descreve toda a API a quem alcançar o servidor.
 
-## Perguntas que só o Thiago responde
+## Decisão
 
-1. **Mesma casa ou casas separadas?** O modelo já tem `household_id`. (a) *Mesma casa*: as duas pessoas veem os mesmos lançamentos, regras e orçamentos; o login só identifica quem é quem. (b) *Casas separadas*: cada pessoa vê só o que é seu. Muda o login, os testes e a tela.
-2. **Aceita dado real num servidor de terceiro?** A alternativa que mantém o dado em casa é a opção A abaixo.
-3. **Quem é a segunda pessoa e ela concorda?** Os dados dela entram aqui.
+- **Casas separadas.** Cada pessoa tem a sua casa (`household_id` próprio) e **nunca** vê o que é da outra. Regras, orçamentos, nomes próprios, importações e, depois, as credenciais do Pluggy também são por casa.
+- **Onde roda: opção A, em casa atrás de rede privada, com login por identidade na borda (L1).** Dado real **não** vai para servidor de terceiro por enquanto; as opções B e C ficam descritas abaixo para o dia em que precisar estar no ar sem o computador de casa, e voltam a exigir decisão do Thiago.
+- **Consentimento da outra pessoa:** é do Thiago combinar com ela antes de qualquer dado dela entrar. Nada dela é importado sem isso.
+
+## O que "casas separadas" muda no código
+
+- Hoje o código usa uma constante (`HOUSEHOLD = "default"`). Ela passa a vir **da identidade da requisição**, em toda rota e também nos comandos de linha (`import`, `orcamento`, `pluggy`).
+- Os lançamentos, as regras, os orçamentos e os nomes próprios já têm `household_id` no banco (ADR 0008), mas **cada consulta precisa ser conferida**: uma sem o filtro vaza dado de uma casa na outra. A etapa 1 começa por essa auditoria e por testes que percorrem **todas** as rotas com duas casas.
+- Uma tabela de usuários liga a identidade à casa. Quem entra é cadastrado **à mão pelo Thiago**; não existe cadastro aberto.
+- As regras padrão (`default_rules.json`) são semeadas por casa; as regras de uma casa não afetam a outra.
 
 ## Opções
 
@@ -42,13 +49,11 @@ Isso traz riscos que hoje não existem:
 | **L2** | **Login próprio** (usuário e senha com hash forte, cookie de sessão `HttpOnly`, limite de tentativas) | Independente de terceiro | Senha financeira própria é superfície a manter e a errar; recuperar senha, bloqueio, tudo seu |
 | **L3** | **Senha única compartilhada** (HTTP Basic sobre HTTPS) | Mínimo possível | Não distingue as duas pessoas; inútil para "casas separadas" |
 
-## Recomendação
+## Por que a opção A com L1
 
 **Opção A com L1.** Rodar num único contêiner, acessível **só pela rede privada**, com a identidade vinda da própria VPN. Sem porta pública na internet. É o menor passo que atende "duas pessoas, de qualquer lugar, com login" sem tornar o dinheiro de ninguém alcançável por quem não foi convidado.
 
 Se um dia for preciso estar no ar sem o computador de casa, a mesma imagem sobe numa VPS (**B**) ainda atrás da rede privada ou de um proxy de acesso (**L1**). Exposição pública direta com login próprio (**L2**) fica por último e só com decisão sua.
-
-Para "mesma casa" ou "casas separadas" a recomendação depende da pergunta 1; o desenho abaixo serve aos dois.
 
 ## Requisitos de segurança (valem em qualquer opção)
 
@@ -63,7 +68,7 @@ Para "mesma casa" ou "casas separadas" a recomendação depende da pergunta 1; o
 
 ## Etapas (um PR cada, depois do aceite)
 
-1. **Identidade e isolamento:** o app lê a identidade, mapeia para `household_id` e recusa o que não tiver. Atrás de uma variável de ambiente, **desligado por padrão** (o uso local não muda). Testes de isolamento.
+1. **Identidade e isolamento:** auditoria de todas as consultas por `household_id`; o app lê a identidade, mapeia para a casa e recusa o que não tiver. Atrás de uma variável de ambiente, **desligado por padrão** (o uso local não muda). Testes de isolamento entre duas casas em todas as rotas.
 2. **Imagem do contêiner:** build do front e do backend, banco em volume, sem `/docs`.
 3. **Backup e restauração**, com roteiro de teste.
 4. **Guia de publicação** (rede privada, e a VPS se escolhida) e roteiro da migração feita pelo Thiago.
@@ -75,4 +80,4 @@ Para "mesma casa" ou "casas separadas" a recomendação depende da pergunta 1; o
 - `household_id` deixa de ser só preparação e passa a ser fronteira de segurança, o que eleva a exigência de teste em toda consulta.
 - Node continua necessário só para construir; na imagem final ele não precisa estar presente.
 - **Custo e limites** de cada opção devem ser conferidos na hora de escolher; este ADR não assume valores.
-- Se a resposta à pergunta 2 for "não", a opção A é a única compatível e as opções B e C saem.
+- Com dado real só em casa, as opções B e C não são usadas agora. Voltar a considerá-las é decisão nova do Thiago (ADR novo).
