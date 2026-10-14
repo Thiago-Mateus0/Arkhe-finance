@@ -18,10 +18,11 @@ if [ "${1:-}" = "demo" ]; then
   python -m financas orcamento "Saúde" 100 >/dev/null
 fi
 if [ "${1:-}" = "import" ]; then shift; exec python -m financas import "$@"; fi
-# Front novo (ADR 0021): constrói web/dist se faltar ou estiver velho. Sem Node, o app antigo segue funcionando.
+# Front (ADR 0021): constrói web/dist se faltar ou estiver velho.
 if command -v npm >/dev/null 2>&1 && [ -f web/package.json ]; then
   if [ ! -f web/dist/index.html ] || [ -n "$(find web/src web/index.html web/package.json -newer web/dist/index.html -print -quit)" ]; then
-    (cd web && npm ci --no-audit --no-fund && npm run build) || echo "aviso: não consegui construir o front novo; o app antigo continua em /"
+    (cd web && npm ci --no-audit --no-fund && npm run build) || echo "aviso: não consegui construir o front (web/dist)."
   fi
 fi
+[ -f web/dist/index.html ] || echo "aviso: sem web/dist a tela não abre. Instale Node 20+ e rode ./run.sh de novo."
 exec uvicorn financas.api:app --host 127.0.0.1 --port 8000

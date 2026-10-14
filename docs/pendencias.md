@@ -10,7 +10,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 |---|---|---|---|
 | **Levantamento** | ✅ fechado | Quem usa, CSV antes de Open Finance, bancos, objetivo, o que fica para depois | ADRs 0001, 0002, 0006, 0008, 0012, 0013 |
 | **Arquitetura** | ✅ fechado | Stack, o que conta como gasto, chave de duplicata, repasse, dinheiro em centavos | Specs `importacao`, `classificacao`, `categorias`, `relatorios`; ADRs 0003 a 0005 e 0011 |
-| **Design** | 🟡 reaberto | Telas, cores por categoria, identidade própria, tema claro opcional. Reaberto pelo [ADR 0021](adr/0021-interface-react-tailwind.md) (Aceito): interface nova em React + Tailwind; Início, Atividades e Orçamento desenhados, faltam Gastos, Fluxo, Regras, Importar e computador (P16) | Spec `interface`; ADRs 0009, 0010, 0014, 0021 |
+| **Design** | ✅ fechado | Telas, cores por categoria, identidade própria, tema claro opcional, layout de computador. Interface em React + Tailwind aplicada ([ADR 0021](adr/0021-interface-react-tailwind.md)); a aba Patrimônio entra com a fase 5 | Spec `interface`; ADRs 0010, 0014, 0021 (o 0009 foi revogado) |
 | **Código** | 🟡 em andamento | Importador, classificação, regras, relatórios, telas, orçamento, parcelas e assinaturas prontos; uso real (fase 3) e controle (fase 4) concluídos. Falta patrimônio (fase 5) e o automático (fase 6) | `src/`, `tests/` |
 
 **Numeração antiga das fases** (usada nos ADRs, que não se editam depois de aceitos): 0 e 1 = Levantamento e Arquitetura; 2 = Design; 3 em diante = Código. Fase 3 (uso real) é a etapa de código em que você usa o app e aponta o que falta.
@@ -44,7 +44,7 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
 | P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; capturas de tela refeitas com `scripts/capturas.py` |
 | P15 | ~~Como o `./run.sh` serve o front em React?~~ — decidido no aceite do ADR 0021: `./run.sh` faz o build quando `web/dist` não existe ou está velho, e o FastAPI serve `web/dist` | — | Feito na PR do scaffold |
-| P16 | Telas sem desenho no visual novo: Gastos, Fluxo, Regras, Importar e o layout de computador (900 px ou mais). Início migrado (em `/novo`); Atividades e Orçamento têm protótipo e são as próximas | Migração dessas telas (ADR 0021) | Desenhar um protótipo de cada, como foi feito com Início, Atividades e Orçamento, antes de migrar |
+| P16 | ~~Telas sem desenho no visual novo (Gastos, Fluxo, Regras, Importar, computador)~~ — feitas na migração, no mesmo visual do protótipo, e conferidas no navegador | — | Feito (ADR 0021) |
 
 ## Antes de divulgar como portfólio
 
