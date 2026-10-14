@@ -4,14 +4,25 @@ Usa a API de backup do próprio SQLite: a cópia é consistente mesmo com o app 
 só aparece com o nome final depois de conferido. Os arquivos têm dado financeiro real: ficam com
 permissão só do dono e nunca devem ir para o git (a pasta `backups/` está no .gitignore).
 """
+import logging
 import os
 import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
 
-PADRAO = re.compile(r"^financas-\d{8}-\d{6}(-\d+)?\.db$")  # só o que o backup automático cria é apagado
+log = logging.getLogger(__name__)
+
+PADRAO = re.compile(r"^financas-\d{8}-\d{6}(-\d+)?\.db$")  # só o que o backup cria é apagado
 MANTER_PADRAO = 30
+MANTER_AUTO = 10          # cópias "antes-de-..." guardadas
+INTERVALO_AUTO = 120      # segundos: vários arquivos importados em sequência geram uma cópia só
+SEGURANCA = "antes-da-restauracao"  # nunca é apagada sozinha
+
+
+def _padrao(etiqueta: str = "") -> re.Pattern:
+    marca = re.escape(f"-{etiqueta}") if etiqueta else ""
+    return re.compile(rf"^financas-\d{{8}}-\d{{6}}(-\d+)?{marca}\.db$")
 
 
 class ErroBackup(Exception):
@@ -60,7 +71,8 @@ def fazer(origem: Path, pasta: Path, manter: int | None = MANTER_PADRAO,
           agora: datetime | None = None, etiqueta: str = "") -> dict:
     """Cria `financas-AAAAMMDD-HHMMSS.db` em `pasta`, confere a cópia e apaga as mais antigas.
 
-    `etiqueta` marca cópias de segurança (ex.: antes de restaurar); essas nunca são apagadas sozinhas.
+    `etiqueta` marca cópias feitas por um motivo (ex.: antes de importar). A retenção vale só entre as
+    cópias da mesma etiqueta; a de segurança da restauração nunca é apagada sozinha.
     """
     origem = Path(origem)
     if not origem.is_file():
@@ -84,8 +96,9 @@ def fazer(origem: Path, pasta: Path, manter: int | None = MANTER_PADRAO,
         parcial.unlink(missing_ok=True)
 
     removidos: list[str] = []
-    if manter and manter > 0 and not etiqueta:
-        antigos = sorted((p for p in pasta.iterdir() if PADRAO.match(p.name)), key=lambda p: p.name, reverse=True)
+    if manter and manter > 0 and etiqueta != SEGURANCA:
+        padrao = _padrao(etiqueta)
+        antigos = sorted((p for p in pasta.iterdir() if padrao.match(p.name)), key=lambda p: p.name, reverse=True)
         for velho in antigos[manter:]:
             velho.unlink()
             removidos.append(velho.name)
@@ -105,8 +118,8 @@ def restaurar(arquivo: Path, destino: Path, substituir: bool = False, agora: dat
             raise ErroBackup(
                 f"Já existe um banco em {destino}. Para substituí-lo pelo backup, rode de novo com --sim "
                 "(uma cópia do banco atual é guardada antes).")
-        copia_de_seguranca = fazer(destino, destino.resolve().parent / "backups", etiqueta="antes-da-restauracao",
-                                   agora=agora)["arquivo"]
+        copia_de_seguranca = fazer(destino, destino.resolve().parent / "backups", manter=None,
+                                   etiqueta=SEGURANCA, agora=agora)["arquivo"]
 
     parcial = destino.with_name(destino.name + ".restaurando")
     try:
@@ -116,3 +129,27 @@ def restaurar(arquivo: Path, destino: Path, substituir: bool = False, agora: dat
     finally:
         parcial.unlink(missing_ok=True)
     return {"destino": destino, "tabelas": contagens, "copia_de_seguranca": copia_de_seguranca}
+
+
+def fazer_automatico(origem: Path, etiqueta: str, agora: datetime | None = None) -> Path | None:
+    """Cópia de segurança antes de uma operação que grava muito (importar, sincronizar).
+
+    Nunca atrapalha a operação: se não der para copiar, registra um aviso (sem dado financeiro) e
+    segue. Desligue com FINANCAS_BACKUP_AUTO=0. Devolve o arquivo criado, ou None se não criou.
+    """
+    if os.environ.get("FINANCAS_BACKUP_AUTO", "1").strip().lower() in ("0", "false", "nao", "não", "no"):
+        return None
+    origem = Path(origem)
+    if not origem.is_file():
+        return None  # banco novo: ainda não há o que proteger
+    pasta = pasta_padrao(origem)
+    agora = agora or datetime.now()
+    padrao = _padrao(etiqueta)
+    try:
+        recentes = [p.stat().st_mtime for p in pasta.iterdir() if padrao.match(p.name)] if pasta.is_dir() else []
+        if recentes and agora.timestamp() - max(recentes) < INTERVALO_AUTO:
+            return None
+        return fazer(origem, pasta, manter=MANTER_AUTO, agora=agora, etiqueta=etiqueta)["arquivo"]
+    except (ErroBackup, OSError, sqlite3.Error) as e:
+        log.warning("backup automático (%s) não foi feito: %s", etiqueta, type(e).__name__)
+        return None

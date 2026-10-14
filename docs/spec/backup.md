@@ -14,6 +14,24 @@ O banco é um único arquivo SQLite (`financas.db`, ou o que `FINANCAS_DB` apont
 
 (Sem o `run.sh`: `python -m financas backup` e `python -m financas restaurar`.)
 
+## Automático
+
+Antes de **importar** (tela, `./run.sh import` e a API) e antes de **sincronizar com o Pluggy**, o app cria sozinho uma cópia `financas-AAAAMMDD-HHMMSS-antes-de-importar.db` (ou `-antes-de-sincronizar`) em `backups/`.
+
+- Guarda as 10 mais novas de cada tipo; as cópias manuais e as de restauração não são tocadas.
+- Vários arquivos importados em sequência (menos de 2 minutos) geram uma cópia só.
+- **Nunca atrapalha a operação:** se não conseguir copiar (disco cheio, por exemplo), registra um aviso sem dado financeiro e a importação segue.
+- Desligue com `FINANCAS_BACKUP_AUTO=0`.
+- Uma cópia ao lado do banco protege de engano (importar errado, apagar regra), não de perda do disco: continue copiando para fora.
+
+## Agendar (opcional)
+
+O app não agenda sozinho. Para uma cópia por dia, em `crontab -e`:
+
+```
+0 21 * * * cd /caminho/do/app && ./run.sh backup --dir /caminho/do/disco-externo >> /tmp/financas-backup.log 2>&1
+```
+
 ## Garantias
 
 - **Cópia consistente com o app aberto:** usa o backup do próprio SQLite; não copia o arquivo "no susto".
@@ -27,7 +45,7 @@ O banco é um único arquivo SQLite (`financas.db`, ou o que `FINANCAS_DB` apont
 
 - **Não criptografa** o arquivo. Guarde em disco ou pasta que já seja só sua. Criptografia entra junto da hospedagem (ADR 0024), se for necessária.
 - **Não copia para fora da máquina sozinho:** uma cópia ao lado do banco protege de engano, não de perda do disco. Aponte `--dir` para um disco externo ou pasta sincronizada.
-- **Não agenda:** rodar de tempos em tempos (ou antes de importar um mês grande) é com o dono; um agendamento pode vir depois.
+- **Não agenda sozinho:** veja "Agendar" acima.
 
 ## Dado real
 

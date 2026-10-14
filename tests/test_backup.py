@@ -160,3 +160,72 @@ def test_pasta_padrao_fica_ao_lado_do_banco_ou_na_variavel(banco, monkeypatch, t
     assert backup.pasta_padrao(banco) == banco.resolve().parent / "backups"
     monkeypatch.setenv("FINANCAS_BACKUP_DIR", str(tmp_path / "nuvem"))
     assert backup.pasta_padrao(banco) == tmp_path / "nuvem"
+
+
+# ---- backup automático antes de importar / sincronizar ----
+
+def _auto(pasta, etiqueta="antes-de-importar"):
+    return sorted(p.name for p in pasta.iterdir() if backup._padrao(etiqueta).match(p.name))
+
+
+def test_automatico_cria_copia_etiquetada_ao_lado_do_banco(banco):
+    r = backup.fazer_automatico(banco, "antes-de-importar")
+    assert r is not None and r.parent == banco.parent / "backups"
+    assert r.name.endswith("-antes-de-importar.db") and _linhas(r) == _linhas(banco)
+    assert not backup.PADRAO.match(r.name)  # não se mistura com a retenção do backup manual
+
+
+def test_automatico_nao_repete_dentro_do_intervalo(banco):
+    assert backup.fazer_automatico(banco, "antes-de-importar") is not None
+    assert backup.fazer_automatico(banco, "antes-de-importar") is None  # outro arquivo da mesma leva
+    assert len(_auto(banco.parent / "backups")) == 1
+    # outra etiqueta tem o próprio intervalo
+    assert backup.fazer_automatico(banco, "antes-de-sincronizar") is not None
+
+
+def test_automatico_guarda_so_as_ultimas_e_nao_toca_nas_manuais(banco, tmp_path):
+    pasta = banco.parent / "backups"
+    manual = backup.fazer(banco, pasta, agora=datetime(2026, 1, 1))["arquivo"]
+    base = datetime.now() - timedelta(days=3)
+    for i in range(backup.MANTER_AUTO + 4):
+        backup.fazer(banco, pasta, manter=backup.MANTER_AUTO, etiqueta="antes-de-importar", agora=base + timedelta(minutes=i))
+    assert len(_auto(pasta)) == backup.MANTER_AUTO
+    assert manual.exists()
+
+
+def test_automatico_desligado_por_variavel(banco, monkeypatch):
+    monkeypatch.setenv("FINANCAS_BACKUP_AUTO", "0")
+    assert backup.fazer_automatico(banco, "antes-de-importar") is None
+    assert not (banco.parent / "backups").exists()
+
+
+def test_automatico_sem_banco_ainda_nao_faz_nada(tmp_path):
+    assert backup.fazer_automatico(tmp_path / "novo.db", "antes-de-importar") is None
+
+
+def test_automatico_nunca_derruba_a_operacao(banco, monkeypatch, caplog):
+    def falha(*a, **k):
+        raise OSError("disco cheio")
+    monkeypatch.setattr(backup, "fazer", falha)
+    with caplog.at_level("WARNING"):
+        assert backup.fazer_automatico(banco, "antes-de-importar") is None
+    assert "não foi feito" in caplog.text and "disco cheio" not in caplog.text  # sem detalhe que vaze dado
+
+
+def test_importar_pela_api_e_pela_cli_fazem_backup_antes(tmp_path, monkeypatch, capsys):
+    from fastapi.testclient import TestClient
+    from financas import api
+    caminho = tmp_path / "app" / "financas.db"
+    caminho.parent.mkdir()
+    db.connect(caminho).close()
+    monkeypatch.setattr(db, "DEFAULT_PATH", caminho)
+    c = TestClient(api.app)
+    assert c.post("/import", files={"file": ("x.csv", CONTA)}).status_code == 200
+    assert len(_auto(caminho.parent / "backups")) == 1  # a API fez a cópia antes de gravar
+
+    arquivo = tmp_path / "conta.csv"
+    arquivo.write_bytes(CONTA)
+    for p in (caminho.parent / "backups").iterdir():  # zera o intervalo para a CLI poder copiar de novo
+        os.utime(p, (0, 0))
+    assert cli.main(["import", str(arquivo)]) == 0
+    assert "Backup automático antes de importar" in capsys.readouterr().out

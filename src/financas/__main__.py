@@ -53,6 +53,9 @@ def _pluggy(simular: bool = False) -> int:
                 conn.close()
             print("SIMULAÇÃO (nada foi gravado no seu banco):")
         else:
+            copia = backup.fazer_automatico(db.DEFAULT_PATH, "antes-de-sincronizar")
+            if copia:
+                print(f"Backup automático antes de sincronizar: {copia}")
             r = pluggy.sincronizar(db.connect())
     except pluggy.ErroPluggy as e:
         print(f"ERRO — {e}")
@@ -124,6 +127,9 @@ def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[0] != "import":
         print(__doc__)
         return 2
+    copia = backup.fazer_automatico(db.DEFAULT_PATH, "antes-de-importar")
+    if copia:
+        print(f"Backup automático antes de importar: {copia}")
     conn = db.connect()
     service.seed_default_rules_once(conn)
     code = 0
