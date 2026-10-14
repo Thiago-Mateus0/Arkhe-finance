@@ -42,6 +42,8 @@ O projeto segue as mesmas quatro etapas do Lifetrailer. Aqui elas se misturaram 
 | P9 | Compartilhar com mais uma pessoa: login, onde hospedar, como proteger a API | Fase 6 | Hospedagem simples com login; **a API atual não pode ser exposta** (ADR 0008) |
 | P10 | Ícone do app em PNG para o iPhone | Fase 3 | Gerar o PNG quando o dono instalar no celular |
 | P13 | E-mail dos commits: parte do histórico usa um endereço pessoal visível no repositório público, e a configuração do git local tem um erro de digitação no domínio (os commits não ligam ao perfil do GitHub) | Antes de divulgar | Usar o e-mail `noreply` do GitHub nos próximos commits (`git config user.email`). **Não reescrever o histórico** do repositório público sem decisão do Thiago |
+| P15 | Cartão: contar o gasto no mês da fatura (hoje, igual ao CSV) ou no mês da compra (`purchaseDate`, só com o Pluggy)? Muda totais de meses fechados | Fase 6a (ADR 0021) | Mês da fatura, para o histórico não mudar; guardar a data da compra para uma tela futura |
+| P16 | Resgate de aplicação (RDB) aparece como entrada na conta. Conta como receita? | Fase 6a | Movimento próprio, fora de receita e de gasto (precisa de teste das leituras) |
 | P11 | ~~Nome do app~~ — decidido: **Arkhe Finance** (ADR 0016) | — | Feito; capturas de tela refeitas com `scripts/capturas.py` |
 
 ## Antes de divulgar como portfólio
