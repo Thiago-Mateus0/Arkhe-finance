@@ -18,4 +18,5 @@ if [ "${1:-}" = "demo" ]; then
   python -m financas orcamento "Saúde" 100 >/dev/null
 fi
 if [ "${1:-}" = "import" ]; then shift; exec python -m financas import "$@"; fi
+if [ "${1:-}" = "pluggy" ]; then shift; exec python -m financas pluggy "$@"; fi
 exec uvicorn financas.api:app --host 127.0.0.1 --port 8000
