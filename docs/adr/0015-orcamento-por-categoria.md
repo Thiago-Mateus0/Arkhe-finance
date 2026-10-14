@@ -1,6 +1,6 @@
 # ADR 0015 — Orçamento: limite mensal fixo por categoria, aviso a 80% e ao estourar
 
-- **Status:** Proposto — aguarda revisão do Thiago
+- **Status:** Aceito em 2026-10-14 — o Thiago delegou: "a sua recomendação"
 - **Data:** 2026-10-10
 - **Fase:** 4 — Controle
 - **Decidido por:** Claude, por delegação do Thiago ("vamos aplicar tudo"); a pendência P2 trazia esta recomendação; **aguarda revisão do Thiago**
