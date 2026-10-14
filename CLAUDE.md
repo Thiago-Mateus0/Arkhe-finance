@@ -64,6 +64,7 @@ python -m pytest -q                         # toda a suíte
 ./run.sh restaurar ARQUIVO [--sim]          # volta o banco para um backup (aceita .db.gpg)
 ./run.sh pluggy                             # sincroniza com o Meu Pluggy (credenciais no .env)
 ./run.sh demo                               # app com dados fictícios e orçamentos de exemplo (demo.db)
+python -m financas nuvem import ARQ.csv...   # grava no Postgres do Supabase (ADR 0025; extra .[nuvem], vars no .env)
 python -m financas orcamento "Delivery" 150,50   # limite mensal de uma categoria
 python scripts/gerar_demo.py                # regenera data/demo/ (determinístico)
 pip install -e ".[capturas]" && python scripts/capturas.py   # refaz docs/img/ com a demo (precisa do build)

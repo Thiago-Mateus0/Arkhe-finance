@@ -8,16 +8,20 @@ from . import classifier, rules
 from .classifier import EXPENSE
 from .importer import detect_format, parse_nubank_conta, parse_nubank_fatura
 
-HOUSEHOLD = "default"
+HOUSEHOLD = "default"  # casa do SQLite local; no Postgres (nuvem.py) a conexão traz o uuid da casa
+
+
+def _casa(conn) -> str:
+    return getattr(conn, "household", HOUSEHOLD)
 
 
 def get_rules(conn: sqlite3.Connection) -> list[dict]:
-    return [dict(r) for r in conn.execute("SELECT * FROM rules WHERE household_id=?", (HOUSEHOLD,))]
+    return [dict(r) for r in conn.execute("SELECT * FROM rules WHERE household_id=?", (_casa(conn),))]
 
 
 def get_own_names(conn: sqlite3.Connection) -> set[str]:
     """Nomes do banco + FINANCAS_OWN_NAMES (separados por ';'), tudo em maiúsculas."""
-    from_db = {r["name"] for r in conn.execute("SELECT name FROM own_names WHERE household_id=?", (HOUSEHOLD,))}
+    from_db = {r["name"] for r in conn.execute("SELECT name FROM own_names WHERE household_id=?", (_casa(conn),))}
     from_env = {" ".join(n.split()).upper() for n in os.environ.get("FINANCAS_OWN_NAMES", "").split(";") if n.strip()}
     return from_db | from_env
 
@@ -29,7 +33,7 @@ def _duplicata_de_outra_origem(conn: sqlite3.Connection, account: str, p, source
     cand = conn.execute(
         "SELECT id, date FROM transactions WHERE household_id=? AND account=? AND source<>? AND amount_cents=?"
         " AND date BETWEEN ? AND ?",
-        (HOUSEHOLD, account, source, p.amount_cents, (d - timedelta(days=1)).isoformat(),
+        (_casa(conn), account, source, p.amount_cents, (d - timedelta(days=1)).isoformat(),
          (d + timedelta(days=1)).isoformat())).fetchall()
     cand = [c for c in cand if c["id"] not in tomadas]
     if not cand:
@@ -44,7 +48,7 @@ def gravar_linhas(conn: sqlite3.Connection, account: str, parsed: list, source: 
     inserted, tomadas = 0, set()
     for p in sorted(parsed, key=lambda r: r.date):
         if conn.execute("SELECT 1 FROM transactions WHERE household_id=? AND dedupe_key=?",
-                        (HOUSEHOLD, p.dedupe_key)).fetchone():
+                        (_casa(conn), p.dedupe_key)).fetchone():
             continue
         outro = _duplicata_de_outra_origem(conn, account, p, source, tomadas)
         if outro is not None:
@@ -56,7 +60,7 @@ def gravar_linhas(conn: sqlite3.Connection, account: str, parsed: list, source: 
             "INSERT INTO transactions (household_id, account, source_id, date, amount_cents, description,"
             " counterparty, kind, category, dedupe_key, source, external_id, operation_type)"
             " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (HOUSEHOLD, account, p.source_id, p.date, p.amount_cents, p.description, p.counterparty, kind,
+            (_casa(conn), account, p.source_id, p.date, p.amount_cents, p.description, p.counterparty, kind,
              rules.pick_category(p.description, p.counterparty, rs), p.dedupe_key, source,
              p.external_id or None, p.operation_type or None))
         inserted += 1
@@ -79,14 +83,14 @@ def reclassify(conn: sqlite3.Connection) -> None:
     own = get_own_names(conn)
     rows = [dict(r) for r in conn.execute(
         "SELECT id, date, source_id, amount_cents, description, counterparty, operation_type FROM transactions"
-        " WHERE household_id=? AND account='nubank_conta'", (HOUSEHOLD,))]
+        " WHERE household_id=? AND account='nubank_conta'", (_casa(conn),))]
     for r in rows:
         r["kind"] = classifier.classify(r["description"], r["amount_cents"], r["counterparty"], own,
                                         r["operation_type"])
     faturas = [dict(r) for r in conn.execute(
         "SELECT id, date, description, amount_cents, operation_type FROM transactions"
         " WHERE household_id=? AND account='nubank_fatura'",
-        (HOUSEHOLD,))]
+        (_casa(conn),))]
     for r in faturas:
         r["kind"] = classifier.classify_fatura(r["description"], r["amount_cents"], own, r["operation_type"])
     classifier.pair_pix_no_credito(rows, faturas)
@@ -99,8 +103,8 @@ def recategorize(conn: sqlite3.Connection) -> int:
     rs = get_rules(conn)
     n = 0
     for t in conn.execute(
-        "SELECT id, description, counterparty FROM transactions WHERE household_id=? AND category_locked=0",
-        (HOUSEHOLD,),
+        "SELECT id, description, counterparty FROM transactions WHERE household_id=? AND NOT category_locked",
+        (_casa(conn),),
     ).fetchall():
         conn.execute("UPDATE transactions SET category=? WHERE id=?",
                      (rules.pick_category(t["description"], t["counterparty"], rs), t["id"]))
@@ -118,7 +122,7 @@ def _spending_by_category(conn: sqlite3.Connection, month: str) -> list[sqlite3.
     return conn.execute(
         "SELECT category, -SUM(amount_cents) AS cents, COUNT(*) AS n FROM transactions"
         " WHERE household_id=? AND date LIKE ? AND kind='expense' GROUP BY category ORDER BY cents DESC",
-        (HOUSEHOLD, f"{month}-%"),
+        (_casa(conn), f"{month}-%"),
     ).fetchall()
 
 
@@ -126,7 +130,7 @@ def _spending_by_account(conn: sqlite3.Connection, month: str) -> dict[str, int]
     rows = conn.execute(
         "SELECT account, -SUM(amount_cents) AS cents FROM transactions"
         " WHERE household_id=? AND date LIKE ? AND kind='expense' GROUP BY account",
-        (HOUSEHOLD, f"{month}-%")).fetchall()
+        (_casa(conn), f"{month}-%")).fetchall()
     return {r["account"]: r["cents"] for r in rows}
 
 
@@ -136,7 +140,7 @@ def monthly_report(conn: sqlite3.Connection, month: str) -> dict:
     prev = {r["category"]: r["cents"] for r in _spending_by_category(conn, _month_before(month))}
     income = conn.execute(
         "SELECT COALESCE(SUM(amount_cents),0) FROM transactions"
-        " WHERE household_id=? AND date LIKE ? AND kind='income'", (HOUSEHOLD, f"{month}-%")).fetchone()[0]
+        " WHERE household_id=? AND date LIKE ? AND kind='income'", (_casa(conn), f"{month}-%")).fetchone()[0]
     return {
         "mes": month,
         "gastos_total": sum(r["cents"] for r in by_cat) / 100,
@@ -156,15 +160,15 @@ def set_category(conn: sqlite3.Connection, tx_id: int, category: str, remember: 
     """Categoria manual: fica travada (regras não sobrescrevem). 'remember' cria uma regra
     pela contraparte (ou descrição) e a aplica às demais transações não travadas."""
     t = conn.execute("SELECT description, counterparty FROM transactions WHERE id=? AND household_id=?",
-                     (tx_id, HOUSEHOLD)).fetchone()
+                     (tx_id, _casa(conn))).fetchone()
     if t is None:
         return None
-    conn.execute("UPDATE transactions SET category=?, category_locked=1 WHERE id=?", (category, tx_id))
+    conn.execute("UPDATE transactions SET category=?, category_locked=TRUE WHERE id=?", (category, tx_id))
     rule_pattern = None
     if remember:
         rule_pattern = (t["counterparty"] or t["description"]).lower()
         conn.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES (?,?,?,5)",
-                     (HOUSEHOLD, rule_pattern, category))
+                     (_casa(conn), rule_pattern, category))
     conn.commit()
     return {"categoria": category, "regra_criada": rule_pattern,
             "recategorizadas": recategorize(conn) if remember else 0}
@@ -173,7 +177,7 @@ def set_category(conn: sqlite3.Connection, tx_id: int, category: str, remember: 
 def list_categories(conn: sqlite3.Connection) -> list[str]:
     rows = conn.execute(
         "SELECT category FROM rules WHERE household_id=? UNION SELECT category FROM transactions"
-        " WHERE household_id=?", (HOUSEHOLD, HOUSEHOLD)).fetchall()
+        " WHERE household_id=?", (_casa(conn), _casa(conn))).fetchall()
     return sorted({r[0] for r in rows} - {rules.UNCATEGORIZED})
 
 
@@ -186,14 +190,14 @@ def seed_default_rules(conn: sqlite3.Connection) -> dict:
         if (r["pattern"].lower(), r["category"]) in existing:
             continue
         conn.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES (?,?,?,?)",
-                     (HOUSEHOLD, r["pattern"], r["category"], r["priority"]))
+                     (_casa(conn), r["pattern"], r["category"], r["priority"]))
         added += 1
     conn.commit()
     return {"adicionadas": added, "recategorizadas": recategorize(conn)}
 
 
 def delete_rule(conn: sqlite3.Connection, rule_id: int) -> bool:
-    cur = conn.execute("DELETE FROM rules WHERE id=? AND household_id=?", (rule_id, HOUSEHOLD))
+    cur = conn.execute("DELETE FROM rules WHERE id=? AND household_id=?", (rule_id, _casa(conn)))
     conn.commit()
     if cur.rowcount:
         recategorize(conn)
@@ -211,7 +215,7 @@ def daily_report(conn: sqlite3.Connection, month: str) -> dict:
     def per_day(m: str, kind: str) -> dict[int, int]:
         rows = conn.execute(
             "SELECT CAST(substr(date, 9, 2) AS INTEGER) AS d, SUM(ABS(amount_cents)) AS c FROM transactions"
-            " WHERE household_id=? AND date LIKE ? AND kind=? GROUP BY d", (HOUSEHOLD, f"{m}-%", kind)).fetchall()
+            " WHERE household_id=? AND date LIKE ? AND kind=? GROUP BY d", (_casa(conn), f"{m}-%", kind)).fetchall()
         return {r["d"]: r["c"] for r in rows}
 
     spend, income = per_day(month, "expense"), per_day(month, "income")
@@ -228,10 +232,19 @@ def daily_report(conn: sqlite3.Connection, month: str) -> dict:
 
 def seed_default_rules_once(conn: sqlite3.Connection) -> bool:
     """Carrega as regras padrão na primeira vez que o banco é usado; depois respeita o que você apagou."""
-    if conn.execute("SELECT 1 FROM meta WHERE key='default_rules_seeded'").fetchone():
+    if hasattr(conn, "household"):  # Postgres: meta é por casa
+        marcada = conn.execute("SELECT 1 FROM meta WHERE household_id=? AND key='default_rules_seeded'",
+                               (_casa(conn),)).fetchone()
+    else:
+        marcada = conn.execute("SELECT 1 FROM meta WHERE key='default_rules_seeded'").fetchone()
+    if marcada:
         return False
     seed_default_rules(conn)
-    conn.execute("INSERT INTO meta (key, value) VALUES ('default_rules_seeded', '1')")
+    if hasattr(conn, "household"):
+        conn.execute("INSERT INTO meta (household_id, key, value) VALUES (?, 'default_rules_seeded', '1')",
+                     (_casa(conn),))
+    else:
+        conn.execute("INSERT INTO meta (key, value) VALUES ('default_rules_seeded', '1')")
     conn.commit()
     return True
 
@@ -261,12 +274,12 @@ def set_budget(conn: sqlite3.Connection, category: str, limit_cents: int) -> Non
     conn.execute(
         "INSERT INTO budgets (household_id, category, limit_cents) VALUES (?,?,?)"
         " ON CONFLICT (household_id, category) DO UPDATE SET limit_cents=excluded.limit_cents",
-        (HOUSEHOLD, category, limit_cents))
+        (_casa(conn), category, limit_cents))
     conn.commit()
 
 
 def delete_budget(conn: sqlite3.Connection, category: str) -> bool:
-    cur = conn.execute("DELETE FROM budgets WHERE household_id=? AND category=?", (HOUSEHOLD, category.strip()))
+    cur = conn.execute("DELETE FROM budgets WHERE household_id=? AND category=?", (_casa(conn), category.strip()))
     conn.commit()
     return bool(cur.rowcount)
 
@@ -274,7 +287,7 @@ def delete_budget(conn: sqlite3.Connection, category: str) -> bool:
 def budget_status(conn: sqlite3.Connection, month: str) -> dict:
     spent = {r["category"]: r["cents"] for r in _spending_by_category(conn, month)}
     itens = []
-    for b in conn.execute("SELECT category, limit_cents FROM budgets WHERE household_id=?", (HOUSEHOLD,)):
+    for b in conn.execute("SELECT category, limit_cents FROM budgets WHERE household_id=?", (_casa(conn),)):
         gasto, limite = spent.get(b["category"], 0), b["limit_cents"]
         itens.append({
             "categoria": b["category"], "limite": limite / 100, "gasto": gasto / 100,
@@ -295,5 +308,5 @@ def budget_status(conn: sqlite3.Connection, month: str) -> dict:
 def months_with_data(conn: sqlite3.Connection) -> list[str]:
     """Meses (aaaa-mm) que têm algum lançamento, do mais recente para o mais antigo."""
     rows = conn.execute("SELECT DISTINCT substr(date, 1, 7) AS m FROM transactions WHERE household_id=? ORDER BY m DESC",
-                        (HOUSEHOLD,)).fetchall()
+                        (_casa(conn),)).fetchall()
     return [r["m"] for r in rows]

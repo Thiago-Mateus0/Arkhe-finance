@@ -2,30 +2,16 @@
 
 Pula se não houver Docker com a imagem postgres:16. Dados 100% fictícios.
 """
-import shutil
 import subprocess
-import time
 import uuid
-from pathlib import Path
 
 import pytest
-
-RAIZ = Path(__file__).resolve().parent.parent
-STUB = Path(__file__).parent / "supabase" / "stub_supabase.sql"
-MIGRACOES = sorted((RAIZ / "supabase" / "migrations").glob("*.sql"))
+from conftest import docker_ok
 
 A, B, C = (str(uuid.uuid4()) for _ in range(3))  # A e C na mesma casa; B em outra
 CASA_AB, CASA_B = str(uuid.uuid4()), str(uuid.uuid4())
 
-
-def _docker_ok() -> bool:
-    if not shutil.which("docker"):
-        return False
-    r = subprocess.run(["docker", "image", "inspect", "postgres:16"], capture_output=True)
-    return r.returncode == 0
-
-
-pytestmark = pytest.mark.skipif(not _docker_ok(), reason="precisa de Docker com a imagem postgres:16")
+pytestmark = pytest.mark.skipif(not docker_ok(), reason="precisa de Docker com a imagem postgres:16")
 
 
 class Banco:
@@ -59,39 +45,22 @@ class Banco:
 
 
 @pytest.fixture(scope="module")
-def db():
-    nome = f"arkhe-rls-{uuid.uuid4().hex[:8]}"
-    subprocess.run(["docker", "run", "-d", "--rm", "--name", nome, "-e", "POSTGRES_PASSWORD=teste", "postgres:16"],
-                   check=True, capture_output=True)
-    try:
-        b = Banco(nome)
-        for _ in range(60):
-            r = subprocess.run(["docker", "exec", nome, "psql", "-h", "127.0.0.1", "-U", "postgres", "-c", "select 1"],
-                               capture_output=True)
-            if r.returncode == 0:
-                break
-            time.sleep(1)
-        else:
-            raise RuntimeError("Postgres não subiu")
-        b.admin(STUB.read_text())
-        for m in MIGRACOES:
-            b.admin(m.read_text())
-        b.admin(f"""
-            insert into auth.users (id) values ('{A}'), ('{B}'), ('{C}');
-            insert into households (id, name) values ('{CASA_AB}', 'casa A'), ('{CASA_B}', 'casa B');
-            insert into members (user_id, household_id) values ('{A}', '{CASA_AB}'), ('{C}', '{CASA_AB}'), ('{B}', '{CASA_B}');
-            insert into transactions (household_id, account, source_id, date, amount_cents, description, kind, category, dedupe_key) values
-              ('{CASA_AB}', 'conta', '1', '2026-01-05', -1500, 'MERCADO FICTICIO A', 'expense', 'Mercado', 'a1'),
-              ('{CASA_AB}', 'conta', '2', '2026-01-06', -2500, 'PADARIA FICTICIA A', 'expense', 'Mercado', 'a2'),
-              ('{CASA_B}',  'conta', '1', '2026-01-05', -9900, 'LOJA FICTICIA B', 'expense', 'Compras', 'b1');
-            insert into rules (household_id, pattern, category) values ('{CASA_B}', 'loja', 'Compras');
-            insert into budgets (household_id, category, limit_cents) values ('{CASA_B}', 'Compras', 50000);
-            insert into own_names (household_id, name) values ('{CASA_B}', 'NOME FICTICIO B');
-            insert into meta (household_id, key, value) values ('{CASA_B}', 'default_rules_seeded', '1');
-        """)
-        yield b
-    finally:
-        subprocess.run(["docker", "rm", "-f", nome], capture_output=True)
+def db(pg):
+    b = Banco(pg[0])
+    b.admin(f"""
+        insert into auth.users (id) values ('{A}'), ('{B}'), ('{C}');
+        insert into households (id, name) values ('{CASA_AB}', 'casa A'), ('{CASA_B}', 'casa B');
+        insert into members (user_id, household_id) values ('{A}', '{CASA_AB}'), ('{C}', '{CASA_AB}'), ('{B}', '{CASA_B}');
+        insert into transactions (household_id, account, source_id, date, amount_cents, description, kind, category, dedupe_key) values
+          ('{CASA_AB}', 'conta', '1', '2026-01-05', -1500, 'MERCADO FICTICIO A', 'expense', 'Mercado', 'a1'),
+          ('{CASA_AB}', 'conta', '2', '2026-01-06', -2500, 'PADARIA FICTICIA A', 'expense', 'Mercado', 'a2'),
+          ('{CASA_B}',  'conta', '1', '2026-01-05', -9900, 'LOJA FICTICIA B', 'expense', 'Compras', 'b1');
+        insert into rules (household_id, pattern, category) values ('{CASA_B}', 'loja', 'Compras');
+        insert into budgets (household_id, category, limit_cents) values ('{CASA_B}', 'Compras', 50000);
+        insert into own_names (household_id, name) values ('{CASA_B}', 'NOME FICTICIO B');
+        insert into meta (household_id, key, value) values ('{CASA_B}', 'default_rules_seeded', '1');
+    """)
+    return b
 
 
 def test_toda_tabela_do_public_tem_rls_ligado(db):
