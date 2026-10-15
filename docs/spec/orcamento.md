@@ -24,7 +24,7 @@ O gasto de uma categoria no mês é a soma dos lançamentos do tipo `gasto` dess
 
 Os limites são comparados em centavos inteiros, sem arredondamento: 80% é `gasto × 5 ≥ limite × 4`. Gastar exatamente o limite é `atencao`, não `estourou`.
 
-Cada item traz: `categoria`, `limite`, `gasto`, `restante` (pode ser negativo), `percentual` (uma casa decimal) e `estado`. A resposta traz também `orcado_total` e `gasto_nas_categorias`. Os itens vêm do mais grave para o mais folgado (estourou, atenção, ok) e, dentro do estado, do maior percentual para o menor. Uma categoria orçada sem gasto no mês aparece com gasto zero.
+Cada item traz: `categoria`, `limite`, `gasto`, `restante` (pode ser negativo), `percentual` (uma casa decimal, arredondado para cima no meio, em inteiros; só exibição, o estado nunca depende dele) e `estado`. A resposta traz também `orcado_total` e `gasto_nas_categorias`. Os itens vêm do mais grave para o mais folgado (estourou, atenção, ok) e, dentro do estado, do maior percentual para o menor. Uma categoria orçada sem gasto no mês aparece com gasto zero.
 
 ## Pontos de entrada
 

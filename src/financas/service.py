@@ -291,7 +291,7 @@ def budget_status(conn: sqlite3.Connection, month: str) -> dict:
         gasto, limite = spent.get(b["category"], 0), b["limit_cents"]
         itens.append({
             "categoria": b["category"], "limite": limite / 100, "gasto": gasto / 100,
-            "restante": (limite - gasto) / 100, "percentual": round(gasto * 100 / limite, 1),
+            "restante": (limite - gasto) / 100, "percentual": (gasto * 2000 + limite) // (2 * limite) / 10,
             "estado": _budget_estado(gasto, limite), "_ord": (BUDGET_ESTADOS.index(_budget_estado(gasto, limite)), -gasto / limite),
         })
     itens.sort(key=lambda i: i["_ord"])
