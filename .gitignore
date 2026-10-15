@@ -12,3 +12,9 @@ web/dist/
 .venv/
 .pytest_cache/
 *.egg-info/
+
+# cópias do .env (nunca no git); só o modelo .env.example vai
+.env.*
+!.env.example
+.env[0-9]*
+*.whl
