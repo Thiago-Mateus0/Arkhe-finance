@@ -3,6 +3,7 @@ import { sair } from "../lib/sessao";
 import { NUVEM } from "../lib/supabase";
 import { hrefDe, type Rota } from "../lib/rotas";
 import { Icone, type NomeIcone } from "./Icone";
+import { Marca } from "./Marca";
 
 const ITENS: { rota: Rota; rotulo: string; icone: NomeIcone }[] = [
   { rota: "inicio", rotulo: "Início", icone: "casa" },
@@ -11,15 +12,6 @@ const ITENS: { rota: Rota; rotulo: string; icone: NomeIcone }[] = [
   { rota: "orcamento", rotulo: "Orçamento", icone: "alvo" },
   { rota: "fluxo", rotulo: "Fluxo", icone: "fluxo" },
 ];
-
-const Marca = () => (
-  <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
-    <rect width="32" height="32" rx="9" fill="var(--accent)" />
-    <rect x="7" y="17" width="4.5" height="8" rx="2.25" fill="var(--on-accent)" />
-    <rect x="13.75" y="12" width="4.5" height="13" rx="2.25" fill="var(--on-accent)" />
-    <rect x="20.5" y="7" width="4.5" height="18" rx="2.25" fill="var(--on-accent)" />
-  </svg>
-);
 
 /** Celular: pílula flutuante + botão de importar. Computador (900 px ou mais): menu lateral. */
 export function Menu() {

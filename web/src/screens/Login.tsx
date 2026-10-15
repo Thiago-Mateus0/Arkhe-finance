@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Marca } from "../components/Marca";
 import { sb } from "../lib/supabase";
 
 export function Login() {
@@ -21,6 +22,7 @@ export function Login() {
 
   return (
     <main className="page login">
+      <Marca tam={72} />
       <h1>Arkhe Finance</h1>
       <p className="t2">Entre para ver suas finanças.</p>
       <form onSubmit={entrar} className="pilha">
