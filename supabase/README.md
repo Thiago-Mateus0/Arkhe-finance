@@ -32,6 +32,26 @@ Seus dados reais passam a existir no Supabase depois do passo 2 (decisão do ADR
 
 A migração `20261014000002_relatorios.sql` cria as funções `meses_com_dados`, `relatorio_mensal`, `relatorio_diario`, `orcamento_status`, `assinaturas_do_mes` e `parcelas_a_vir`, com o mesmo formato JSON da API local. Cada pessoa logada vê só a sua casa. Aplique como a primeira: **SQL Editor → New query → cole o conteúdo do arquivo → Run**.
 
+## Colocar o app no ar (etapa 4)
+
+O front tem dois modos, escolhidos na hora do build. Sem as variáveis abaixo, é o app local de sempre (API em `127.0.0.1`). Com elas, é o app da nuvem: pede login e lê tudo do Supabase.
+
+| Variável | Onde pegar |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase > Project Settings > API > **Project URL** |
+| `VITE_SUPABASE_ANON_KEY` | a mesma página, chave **anon public**. **Nunca** a `service_role` |
+
+A chave `anon` é pública por desenho (vai no código do site); o que protege o dado é o RLS. A `service_role` ignora o RLS e **não pode** aparecer no front, no git nem no chat.
+
+1. **Migração 3:** SQL Editor, cole `migrations/20261014000003_escrita.sql` e Run (cria categorizar, recategorizar e categorias).
+2. **Seu usuário:** Supabase > Authentication > Users > **Add user** (e-mail e senha, marque *Auto Confirm User*).
+3. **Ligar o usuário à sua casa:** no SQL Editor, `insert into members (user_id, household_id) select id, '<ID DA CASA>' from auth.users where email = '<SEU E-MAIL>';`
+4. **Fechar o cadastro:** Authentication > Sign In / Providers > desligue *Allow new users to sign up*. Sem isso qualquer pessoa cria conta (ela não veria nada, mas não precisa poder).
+5. **Cloudflare Pages:** Create > Pages > Connect to Git > o repositório. Build command `npm run build`, build output `dist`, **Root directory `web`**, e as duas variáveis acima (mais `NODE_VERSION` = `22`).
+6. No celular: abra o endereço `*.pages.dev`, entre e use **Adicionar à tela inicial**.
+
+Importar CSV continua sendo feito no computador (`python -m financas nuvem import`); o celular só consulta e categoriza.
+
 ## Testes
 
 `tests/test_supabase_rls.py` sobe um Postgres 16 descartável no Docker e prova o isolamento (A nunca lê, grava ou apaga dado de B). `tests/test_nuvem_paridade.py` prova que o importador dá o mesmo resultado no Postgres e no SQLite. `tests/test_nuvem_relatorios.py` prova que cada relatório em SQL dá o mesmo resultado que o Python. Pula sozinho se não houver Docker com a imagem `postgres:16`. Os dados são fictícios.

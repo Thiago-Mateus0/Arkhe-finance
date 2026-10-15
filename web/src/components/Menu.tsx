@@ -1,4 +1,6 @@
 import { useApp } from "../lib/contexto";
+import { sair } from "../lib/sessao";
+import { NUVEM } from "../lib/supabase";
 import { hrefDe, type Rota } from "../lib/rotas";
 import { Icone, type NomeIcone } from "./Icone";
 
@@ -32,6 +34,7 @@ export function Menu() {
             <a key={i.rota} href={hrefDe(i.rota)} aria-current={ativa === i.rota ? "page" : undefined}><Icone nome={i.icone} /> {i.rotulo}</a>
           ))}
           <a href={hrefDe("importar")} aria-current={ativa === "importar" ? "page" : undefined}><Icone nome="enviar" /> Importar</a>
+          {NUVEM && <button type="button" className="btn" onClick={sair}>Sair</button>}
         </nav>
       </aside>
 
