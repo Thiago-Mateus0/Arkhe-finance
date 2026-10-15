@@ -89,7 +89,7 @@ def mundo(pg, tmp_path_factory):
 def chamar(nome: str, user: str, consulta: str):
     r = subprocess.run(
         ["docker", "exec", "-i", nome, "psql", "-U", "postgres", "-At", "-v", "ON_ERROR_STOP=1", "-q"],
-        input=f"set role authenticated; select set_config('request.jwt.claim.sub','{user}',false); select {consulta};",
+        input=f"set role authenticated; select set_config('request.jwt.claim.sub','{user}',false); select coalesce(({consulta})::text, 'null');",
         capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     return json.loads(r.stdout.strip().splitlines()[-1])
@@ -185,3 +185,118 @@ def test_duas_casas_cada_uma_ve_so_o_seu_relatorio(mundo, pg):
     assert chamar(nome, user2, "meses_com_dados()") == ["2026-09"]
     meu = chamar(nome, user, "relatorio_mensal('2026-09')")
     assert "Lazer" not in [c["categoria"] for c in meu["por_categoria"]]
+
+
+# ---------- escrita (migração 0003): mesma regra do Python ----------
+
+def _rodar(nome, user, sql):
+    r = subprocess.run(
+        ["docker", "exec", "-i", nome, "psql", "-U", "postgres", "-At", "-v", "ON_ERROR_STOP=1", "-q"],
+        input=f"set role authenticated; select set_config('request.jwt.claim.sub','{user}',false); {sql}",
+        capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    return r.stdout.strip().splitlines()
+
+
+def _estado_pg(nome, user):
+    linhas = _rodar(nome, user, "select dedupe_key || '|' || category || '|' || category_locked "
+                                 "from transactions order by dedupe_key")
+    return [tuple(x.split("|")) for x in linhas[1:]]
+
+
+def _estado_py(lite):
+    return [(r["dedupe_key"], r["category"], "true" if r["category_locked"] else "false") for r in lite.execute(
+        "SELECT dedupe_key, category, category_locked FROM transactions ORDER BY dedupe_key")]
+
+
+@pytest.fixture
+def escrita(pg, tmp_path):
+    """Banco local e casa na nuvem recriados a cada teste, porque aqui os testes ESCREVEM."""
+    import os
+    nome, url = pg
+    os.environ["FINANCAS_OWN_NAMES"] = "Dono Exemplo Silva"
+    lite = db.connect(tmp_path / "w.db")
+    _popular_local(lite)
+    casa, user = str(uuid.uuid4()), str(uuid.uuid4())
+    psql(nome, f"insert into households (id, name) values ('{casa}', 'esc');"
+               f"insert into auth.users (id) values ('{user}');"
+               f"insert into members (user_id, household_id) values ('{user}', '{casa}')")
+    nuv = nuvem.PgConn(url, casa)
+    assert nuvem.migrar(lite, nuv)["conferido"]
+    nuv.close()
+    yield lite, nome, user
+    lite.close()
+
+
+def test_categorias_igual(escrita):
+    lite, nome, user = escrita
+    assert chamar(nome, user, "categorias()") == service.list_categories(lite)
+
+
+def test_categoria_manual_sem_lembrar_igual(escrita):
+    lite, nome, user = escrita
+    chave = lite.execute("SELECT dedupe_key, id FROM transactions WHERE category <> 'Sem categoria'"
+                         " ORDER BY dedupe_key LIMIT 1").fetchone()
+    esperado = service.set_category(lite, chave["id"], "Lazer", remember=False)
+    obtido = chamar(nome, user, f"categorizar((select id from transactions where dedupe_key = '{chave['dedupe_key']}'),"
+                                f" 'Lazer', false)")
+    assert obtido == esperado
+    assert _estado_pg(nome, user) == _estado_py(lite)
+
+
+def test_categoria_manual_lembrando_cria_regra_e_recategoriza_igual(escrita):
+    lite, nome, user = escrita
+    chave = lite.execute("SELECT dedupe_key, id FROM transactions WHERE category = 'Sem categoria' "
+                         "ORDER BY dedupe_key LIMIT 1").fetchone()
+    esperado = service.set_category(lite, chave["id"], "Categoria Nova", remember=True)
+    obtido = chamar(nome, user, f"categorizar((select id from transactions where dedupe_key = '{chave['dedupe_key']}'),"
+                                f" 'Categoria Nova', true)")
+    assert obtido == esperado and obtido["regra_criada"]
+    assert _estado_pg(nome, user) == _estado_py(lite)
+
+
+def test_travada_nao_e_recategorizada_pela_regra_nova(escrita):
+    lite, nome, user = escrita
+    chave = lite.execute("SELECT dedupe_key, id FROM transactions WHERE description LIKE '%NETFLIX%' "
+                         "ORDER BY dedupe_key LIMIT 1").fetchone()
+    service.set_category(lite, chave["id"], "Lazer")
+    chamar(nome, user, f"categorizar((select id from transactions where dedupe_key = '{chave['dedupe_key']}'), 'Lazer')")
+    lite.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES ('default','netflix','Outra',99)")
+    lite.commit()
+    esperado = service.recategorize(lite)
+    _rodar(nome, user, "insert into rules (pattern, category, priority) values ('netflix', 'Outra', 99);")
+    assert chamar(nome, user, "recategorizar()") == esperado
+    assert _estado_pg(nome, user) == _estado_py(lite)
+    assert dict((d, c) for d, c, _ in _estado_pg(nome, user))[chave["dedupe_key"]] == "Lazer"
+
+
+def test_empate_de_prioridade_vence_o_padrao_mais_longo(escrita):
+    lite, nome, user = escrita
+    for conn_sql in ("netflix", "débito - netflix"):
+        lite.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES ('default',?,?,50)",
+                     (conn_sql, f"Cat {len(conn_sql)}"))
+        _rodar(nome, user, f"insert into rules (pattern, category, priority) values ('{conn_sql}', 'Cat {len(conn_sql)}', 50);")
+    lite.commit()
+    assert chamar(nome, user, "recategorizar()") == service.recategorize(lite)
+    assert _estado_pg(nome, user) == _estado_py(lite)
+
+
+def test_nao_categoriza_lancamento_de_outra_casa(escrita):
+    lite, nome, user = escrita
+    outro = str(uuid.uuid4())
+    psql(nome, f"insert into auth.users (id) values ('{outro}')")
+    assert chamar(nome, outro, "categorizar(1, 'Hack', false)") is None
+    assert chamar(nome, outro, "recategorizar()") == 0
+
+
+def test_lembrar_usa_a_contraparte_quando_existe_igual(escrita):
+    lite, nome, user = escrita
+    chave = lite.execute("SELECT dedupe_key, id FROM transactions WHERE account='nubank_conta' AND counterparty <> '' "
+                         "ORDER BY dedupe_key LIMIT 1").fetchone()
+    esperado = service.set_category(lite, chave["id"], "Cat Contraparte", remember=True)
+    obtido = chamar(nome, user, f"categorizar((select id from transactions where dedupe_key = '{chave['dedupe_key']}'),"
+                                f" 'Cat Contraparte', true)")
+    assert obtido == esperado
+    assert obtido["regra_criada"] == lite.execute(
+        "SELECT lower(counterparty) FROM transactions WHERE id=?", (chave["id"],)).fetchone()[0]
+    assert _estado_pg(nome, user) == _estado_py(lite)

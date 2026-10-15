@@ -1,5 +1,8 @@
 import { Menu } from "./components/Menu";
 import { Provedor, useApp } from "./lib/contexto";
+import { useSessao } from "./lib/sessao";
+import { NUVEM } from "./lib/supabase";
+import { Login } from "./screens/Login";
 import { Atividades } from "./screens/Atividades";
 import { Fluxo } from "./screens/Fluxo";
 import { Gastos } from "./screens/Gastos";
@@ -33,6 +36,13 @@ function Casca() {
   );
 }
 
-export function App() {
+function AppNuvem() {
+  const sessao = useSessao();
+  if (sessao === "carregando") return null;
+  if (sessao === "fora") return <Login />;
   return <Provedor><Casca /></Provedor>;
+}
+
+export function App() {
+  return NUVEM ? <AppNuvem /> : <Provedor><Casca /></Provedor>;
 }

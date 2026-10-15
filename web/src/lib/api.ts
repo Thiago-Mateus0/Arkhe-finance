@@ -1,4 +1,8 @@
+import { nuvemApi } from "./nuvemApi";
+import { sb } from "./supabase";
+
 export async function api<T>(url: string, init?: RequestInit): Promise<T> {
+  if (sb) return nuvemApi<T>(sb, url, init); // modo nuvem (ADR 0025)
   const r = await fetch(url, init);
   if (!r.ok) {
     const e = (await r.json().catch(() => ({}))) as { detail?: string };

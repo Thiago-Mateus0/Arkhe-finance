@@ -262,3 +262,9 @@ button.tx { text-align: left; }
 .cab h1 { font-size: 1.3rem; white-space: nowrap; }
 .mesbtn { font-size: .9rem; }
 @media (min-width: 900px) { .cab h1 { font-size: 1.7rem; } .mesbtn { font-size: 1rem; } }
+
+/* Login (modo nuvem, ADR 0025) */
+.login { max-width: 380px; margin: 0 auto; padding-top: 12vh; }
+.login input { width: 100%; padding: 14px 16px; border-radius: 16px; border: 1px solid var(--edge-2); background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); outline: none; font: inherit; }
+.login input:focus { border-color: var(--accent); }
+.login .btn { width: 100%; margin-top: 20px; }

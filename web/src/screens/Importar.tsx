@@ -2,6 +2,8 @@ import { useRef, useState } from "react";
 import { Cabecalho } from "../components/Cabecalho";
 import { api, type ResultadoImport } from "../lib/api";
 import { useApp } from "../lib/contexto";
+import { sair } from "../lib/sessao";
+import { NUVEM } from "../lib/supabase";
 
 type Linha = { nome: string; ok: true; r: ResultadoImport } | { nome: string; ok: false; msg: string };
 
@@ -28,6 +30,17 @@ export function Importar() {
     }
     invalidar(); recarregarMeses(); setEnviando(false);
   };
+
+  if (NUVEM) {
+    return (
+      <>
+        <Cabecalho titulo="Importar" semMes />
+        <p className="t2">Aqui você vê a versão na nuvem. A importação de CSV ainda é feita no computador:
+          <code> python -m financas nuvem import arquivo.csv</code>. Depois é só abrir este app de novo.</p>
+        <button type="button" className="btn" onClick={sair}>Sair</button>
+      </>
+    );
+  }
 
   return (
     <>
