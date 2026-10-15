@@ -47,7 +47,7 @@ A chave `anon` é pública por desenho (vai no código do site); o que protege o
 2. **Seu usuário:** Supabase > Authentication > Users > **Add user** (e-mail e senha, marque *Auto Confirm User*).
 3. **Ligar o usuário à sua casa:** no SQL Editor, `insert into members (user_id, household_id) select id, '<ID DA CASA>' from auth.users where email = '<SEU E-MAIL>';`
 4. **Fechar o cadastro:** Authentication > Sign In / Providers > desligue *Allow new users to sign up*. Sem isso qualquer pessoa cria conta (ela não veria nada, mas não precisa poder).
-5. **Cloudflare Pages:** Create > Pages > Connect to Git > o repositório. Build command `npm run build`, build output `dist`, **Root directory `web`**, e as duas variáveis acima (mais `NODE_VERSION` = `22`).
+5. **Cloudflare:** Workers & Pages > Create > Connect to Git > o repositório. **Root directory `web`**, build command `npm run build`, deploy command `npx wrangler deploy` (a configuração está em `web/wrangler.jsonc`), e as duas variáveis acima como *build variables* (mais `NODE_VERSION` = `22`). Na versão antiga "Pages": build output `dist`.
 6. No celular: abra o endereço `*.pages.dev`, entre e use **Adicionar à tela inicial**.
 
 Importar CSV continua sendo feito no computador (`python -m financas nuvem import`); o celular só consulta e categoriza.
