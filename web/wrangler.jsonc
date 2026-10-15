@@ -1,0 +1,10 @@
+{
+  // Hospedagem do front no Cloudflare (Workers com arquivos estáticos). Só serve o que o
+  // `npm run build` gerou em dist/; o dado vem do Supabase, sob login e RLS (ADR 0025).
+  "name": "arkhe-finance",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}
