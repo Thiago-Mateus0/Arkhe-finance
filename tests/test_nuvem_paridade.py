@@ -121,3 +121,83 @@ def test_casas_diferentes_no_mesmo_postgres_nao_se_misturam(pg, ambos):
 def test_nuvem_sem_credencial_diz_o_que_falta():
     with pytest.raises(nuvem.ErroNuvem, match="SUPABASE_DB_URL"):
         nuvem.connect({})
+
+
+# ---------- migração do banco local (etapa 5) ----------
+
+def _banco_local_rico(lite):
+    """Um banco local com o que só existe nele: regra própria, nome próprio, orçamento, categoria travada."""
+    service.seed_default_rules_once(lite)
+    lite.execute("INSERT INTO rules (household_id, pattern, category, priority) VALUES ('default','sua academia','Assinaturas',10)")
+    lite.execute("INSERT INTO own_names (household_id, name) VALUES ('default','NOME FICTICIO PROPRIO')")
+    lite.commit()
+    service.set_budget(lite, "Delivery", 15050)
+    for arq in ("nubank_conta_fake.csv", "nubank_fatura_fake.csv"):
+        service.import_csv(lite, (FIX / arq).read_bytes())
+    tid = lite.execute("SELECT id FROM transactions WHERE kind='expense' ORDER BY dedupe_key LIMIT 1").fetchone()["id"]
+    service.set_category(lite, tid, "Categoria Manual")  # fica travada
+
+
+def test_migrar_leva_tudo_e_os_totais_batem(ambos):
+    lite, nuv = ambos
+    _banco_local_rico(lite)
+    r = nuvem.migrar(lite, nuv)
+    assert r["conferido"] and r["lancamentos_novos"] == r["lancamentos_locais"] > 0
+    assert r["regras_novas"] > 0 and r["nomes"] == 1 and r["orcamentos"] == 1
+    assert foto(lite) == foto(nuv)                                   # linha por linha, tipo e categoria
+    assert nuvem.resumo(lite) == nuvem.resumo(nuv)
+    assert nuvem.resumo(nuv)["travadas"] >= 1                        # categoria travada foi junto
+    assert {(r["pattern"], r["category"]) for r in service.get_rules(lite)} == \
+           {(r["pattern"], r["category"]) for r in service.get_rules(nuv)}
+    assert service.get_own_names(lite) == service.get_own_names(nuv)
+    assert service.seed_default_rules_once(nuv) is False             # regras padrão não entram de novo
+
+
+def test_migrar_de_novo_nao_duplica_nada(ambos):
+    lite, nuv = ambos
+    _banco_local_rico(lite)
+    nuvem.migrar(lite, nuv)
+    antes = foto(nuv), len(service.get_rules(nuv))
+    r = nuvem.migrar(lite, nuv)
+    assert r["lancamentos_novos"] == 0 and r["regras_novas"] == 0 and r["conferido"]
+    assert (foto(nuv), len(service.get_rules(nuv))) == antes
+
+
+def test_simular_nao_grava_nada_na_nuvem(ambos):
+    lite, nuv = ambos
+    _banco_local_rico(lite)
+    r = nuvem.migrar(lite, nuv, simular=True)
+    assert r["simulacao"] and r["lancamentos_novos"] > 0
+    assert foto(nuv) == [] and service.get_rules(nuv) == []
+
+
+def test_migrar_nao_altera_o_banco_local(ambos):
+    lite, nuv = ambos
+    _banco_local_rico(lite)
+    antes = foto(lite), len(service.get_rules(lite))
+    nuvem.migrar(lite, nuv)
+    assert (foto(lite), len(service.get_rules(lite))) == antes
+
+
+def test_nuvem_com_dado_diferente_nao_confere_e_nada_e_gravado(ambos):
+    """Se a casa da nuvem já tem outra coisa, os totais não batem: recusa em vez de misturar."""
+    lite, nuv = ambos
+    _banco_local_rico(lite)
+    nuv.execute("INSERT INTO transactions (household_id, account, source_id, date, amount_cents, description, kind,"
+                " category, dedupe_key) VALUES (?, 'nubank_conta', 'x', '2026-01-01', -999, 'OUTRA COISA', 'expense',"
+                " 'Mercado', 'chave-estranha')", (nuv.household,))
+    nuv.commit()
+    r = nuvem.migrar(lite, nuv)
+    assert r["conferido"] is False
+    assert nuv.execute("SELECT COUNT(*) AS n FROM transactions WHERE household_id=?", (nuv.household,)).fetchone()["n"] == 1
+
+
+def test_migrar_grava_de_verdade_visivel_para_outra_conexao(pg, ambos):
+    lite, nuv = ambos
+    _banco_local_rico(lite)
+    nuvem.migrar(lite, nuv)
+    outra = nuvem.PgConn(pg[1], nuv.household)  # sessão nova: só enxerga o que foi confirmado (commit)
+    try:
+        assert foto(outra) == foto(lite)
+    finally:
+        outra.close()

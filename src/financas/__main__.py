@@ -10,6 +10,7 @@
 import getpass
 import os
 import re
+import sqlite3
 import sys
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -72,8 +73,10 @@ def _pluggy(simular: bool = False) -> int:
 def _nuvem(args: list[str]) -> int:
     """Grava no Postgres hospedado (ADR 0025): `nuvem import ARQ...` e `nuvem pluggy`."""
     from . import nuvem, pluggy
+    if args and args[0] == "migrar" and set(args[1:]) <= {"--simular"}:
+        return _migrar_para_nuvem(simular="--simular" in args)
     if not args or args[0] not in ("import", "pluggy") or (args[0] == "import" and len(args) < 2):
-        print("uso: python -m financas nuvem import ARQ.csv... | nuvem pluggy")
+        print("uso: python -m financas nuvem import ARQ.csv... | nuvem pluggy | nuvem migrar [--simular]")
         return 2
     try:
         conn = nuvem.connect()
@@ -94,6 +97,30 @@ def _nuvem(args: list[str]) -> int:
     except (nuvem.ErroNuvem, pluggy.ErroPluggy) as e:
         print(f"ERRO — {e}")
         return 1
+
+
+def _migrar_para_nuvem(simular: bool) -> int:
+    """Copia o banco local (SQLite) para a nuvem, só leitura do local; conferido por totais."""
+    from . import nuvem
+    if not db.DEFAULT_PATH.exists():
+        print(f"ERRO — não achei o banco local em {db.DEFAULT_PATH}")
+        return 1
+    try:
+        nuv = nuvem.connect()
+    except nuvem.ErroNuvem as e:
+        print(f"ERRO — {e}")
+        return 1
+    lite = sqlite3.connect(f"file:{db.DEFAULT_PATH}?mode=ro", uri=True)  # leitura: não altera o local
+    lite.row_factory = sqlite3.Row
+    r = nuvem.migrar(lite, nuv, simular=simular)
+    print("SIMULAÇÃO (nada foi gravado na nuvem):" if simular else "Migração para a nuvem:")
+    print(f"  lançamentos no banco local: {r['lancamentos_locais']}; novos na nuvem: {r['lancamentos_novos']}")
+    print(f"  regras novas: {r['regras_novas']}; nomes próprios: {r['nomes']}; orçamentos: {r['orcamentos']}")
+    if not r["conferido"]:
+        print("ERRO — os totais da nuvem NÃO batem com os do banco local; nada foi gravado.")
+        return 1
+    print("  conferido: totais por conta, tipo e categoria iguais aos do banco local")
+    return 0
 
 
 def _aviso_dado_real() -> None:
