@@ -1,5 +1,7 @@
 # Arkhe Finance
 
+[![CI](https://github.com/Thiago-Mateus0/finan-as/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Thiago-Mateus0/finan-as/actions/workflows/ci.yml)
+
 App pessoal de finanças. Importa o **CSV de conta e de fatura do Nubank**, separa o que é gasto do que é só dinheiro passando pela conta, categoriza por regras e mostra, no celular, para onde o dinheiro está indo.
 
 Nasceu de uma necessidade pessoal: ter visão do próprio dinheiro a partir do que o banco já exporta, sem entregar acesso à conta a terceiros. Roda **local** (SQLite), sem servidor e sem enviar dado financeiro a ninguém. **Opcional:** a sincronização com o Meu Pluggy (`./run.sh pluggy`) é a única parte que passa os dados por um terceiro, e só roda se você a configurar.
