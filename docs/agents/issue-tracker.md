@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues deste repo vivem no GitHub (`Thiago-Mateus0/finan-as`). Em sessões sem a CLI `gh`, use as ferramentas do GitHub disponíveis; o contrato é o mesmo.
+Issues deste repo vivem no GitHub (`Thiago-Mateus0/Arkhe-finance`). Em sessões sem a CLI `gh`, use as ferramentas do GitHub disponíveis; o contrato é o mesmo.
 
 ## Convenções
 

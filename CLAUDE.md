@@ -81,7 +81,7 @@ Nomes das suas outras contas (viram transferência, não gasto): `export FINANCA
 
 - **Não abstraia antes da hora.** Código no nível real do projeto, sem camada que não paga aluguel.
 - **Teste antes** no que for classificação ou dinheiro. Bug real vira teste.
-- **Uma coisa por vez.** Se a tarefa cresceu além do combinado, pare e mostre o plano.
+- **Uma coisa por vez, sem parar à toa.** Se a tarefa cresceu além do combinado, registre o desvio no PR e siga; só pare se cair na **lista de parada** (seção Autonomia).
 - **Não crie doc novo** sem checar se o conteúdo pertence a um spec ou ADR existente.
 - **O diff mora na PR, não no chat.** Toda PR segue `.github/pull_request_template.md`, com **"O que conferir"**: até 3 linhas que o Thiago valida sem ler código.
 - **Interface:** verifique no navegador (Playwright) antes de dizer que ficou pronta; olhe a imagem.
@@ -93,13 +93,15 @@ Nomes das suas outras contas (viram transferência, não gasto): `export FINANCA
 
 O Claude vai até o PR sozinho (e o Thiago faz o merge) quando a suíte passa, em: correção de bug com teste que falha antes, refatoração sem mudança de comportamento, implementação do que um ADR **aceito** já decidiu, teste/script/doc de processo.
 
-**Abre o PR e para, esperando o Thiago:**
+**Lista de parada — a única.** Nestes casos abre o PR e **não pede o merge**, esperando o Thiago:
 - decisão nova de produto ou de domínio (vira ADR);
 - mudança na regra de classificação (o que conta como gasto), em duplicata ou em repasse;
 - qualquer coisa que toque dado real, acesso ou publicação (deploy, hospedagem, login);
 - fato que só o Thiago tem (formato de um CSV novo, o que é uma transferência dele).
 
-**Decisão pendente não trava o trabalho.** Registre em `docs/pendencias.md` com as opções e a recomendação; siga com o que não depende dela.
+**Fora da lista, não pare para perguntar.** Escolha a opção mais reversível, registre a suposição no PR e siga até o fim da tarefa.
+
+**Dentro da lista, parar o merge não é parar a sessão.** Registre a decisão pendente em `docs/pendencias.md` com as opções e a recomendação; siga com o que não depende dela.
 
 **Formato de resposta:** (1) o que mudou, 1–3 linhas · (2) link do PR · (3) testes · (4) o que precisa do Thiago, só se existir. Português, direto.
 
@@ -108,7 +110,7 @@ O Claude vai até o PR sozinho (e o Thiago faz o merge) quando a suíte passa, e
 ## Agent skills
 
 ### Issue tracker
-Issues no GitHub Issues de `Thiago-Mateus0/finan-as`. Veja `docs/agents/issue-tracker.md`.
+Issues no GitHub Issues de `Thiago-Mateus0/Arkhe-finance`. Veja `docs/agents/issue-tracker.md`.
 
 ### Domain docs
 Single-context: `docs/spec/` + `docs/adr/` na raiz. Veja `docs/agents/domain.md`.
