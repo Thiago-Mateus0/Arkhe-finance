@@ -1,6 +1,6 @@
 # Arkhe Finance
 
-[![CI](https://github.com/Thiago-Mateus0/finan-as/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Thiago-Mateus0/finan-as/actions/workflows/ci.yml)
+[![CI](https://github.com/Thiago-Mateus0/arkhe-finance/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Thiago-Mateus0/arkhe-finance/actions/workflows/ci.yml)
 
 App pessoal de finanças. Importa o **CSV de conta e de fatura do Nubank**, separa o que é gasto do que é só dinheiro passando pela conta, categoriza por regras e mostra, no celular, para onde o dinheiro está indo.
 
